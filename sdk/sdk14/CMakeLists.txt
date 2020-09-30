@@ -10,6 +10,13 @@ target_link_options_multi("${SDK_14_TARGETS}" "-mfpu=fpv4-sp-d16")
 target_link_options_multi("${SDK_14_TARGETS}" "-T${PROJECT_SOURCE_DIR}/linker/gcc_nrf52832_s132v5_64kb.ld")
 target_link_options_multi("${SDK_14_TARGETS}" "-T${PROJECT_SOURCE_DIR}/linker/nrf5x_common.ld")
 
+target_sources_multi("${SDK_14_TARGETS}" "./components/libraries/led_softblink/led_softblink.c")
+target_sources_multi("${SDK_14_TARGETS}" "./components/libraries/low_power_pwm/low_power_pwm.c")
+target_include_directories_system_multi("${SDK_14_TARGETS}" "./components/libraries/led_softblink")
+target_include_directories_system_multi("${SDK_14_TARGETS}" "./components/libraries/low_power_pwm")
+target_sources_multi("${SDK_14_TARGETS}" "./components/drivers_nrf/pwm/nrf_drv_pwm.c")
+target_include_directories_system_multi("${SDK_14_TARGETS}" "./components/drivers_nrf/pwm/nrf_drv_pwm")
+
 target_sources_multi("${SDK_14_TARGETS}" "./components/toolchain/gcc/gcc_startup_nrf52.s")
 target_sources_multi("${SDK_14_TARGETS}" "./components/toolchain/system_nrf52.c")
 target_sources_multi("${SDK_14_TARGETS}" "./components/libraries/util/app_util_platform.c")
