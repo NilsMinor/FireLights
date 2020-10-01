@@ -40,6 +40,9 @@
 #include "GlobalState.h"
 #include "InukModule.h"
 #include "InukIOModule.h"
+#include <Boardconfig.h>
+
+
 
 void setBoardConfiguration_github_nrf52(BoardConfiguration* c)
 {

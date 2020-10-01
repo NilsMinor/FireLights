@@ -2,8 +2,10 @@
 #include <FruityHal.h>
 #include <Boardconfig.h>
 #include <InukTypes.h>
+#include <GlobalState.h>
 
 // inuk base board - https://github.com/NilsMinor/inuk-base
+extern void setCustomPinset_Inuk(CustomPins* pinsetConfig);
 
 void setCustomPinset_Inuk(CustomPins* pinConfig){
 		InukExtPins* pins = (InukExtPins*)pinConfig;
@@ -45,6 +47,7 @@ void setBoard_inuk(BoardConfiguration *c)
 
         // disable fruitymesh adc
         c->batteryAdcInputPin = -1;
+        GS->boardconf.getCustomPinset = &setCustomPinset_Inuk;
 
     }
 #endif // BOARD_TYPE == 4

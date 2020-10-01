@@ -6,6 +6,7 @@ _build/
 /Debug52/
 /deploy/current.txt
 dist/
+build/
 
 # Cppcheck
 a-cppcheck-build-dir/
