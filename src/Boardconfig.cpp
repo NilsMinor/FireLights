@@ -34,17 +34,11 @@
 #include <GlobalState.h>
 #include <RecordStorage.h>
 
-<<<<<<< HEAD
-extern void setBoard_4(BoardConfiguration* c);
-extern void setBoard_18(BoardConfiguration* c);
-extern void setBoard_19(BoardConfiguration* c);
-extern void setBoard_inuk(BoardConfiguration *c);
-
-=======
+ 
+//extern void setBoard_inuk(BoardConfiguration *c);
 extern void SetBoard_4(BoardConfiguration* c);
 extern void SetBoard_18(BoardConfiguration* c);
-extern void SetBoard_19(BoardConfiguration* c);
->>>>>>> master
+extern void SetBoard_inuk(BoardConfiguration* c);
 
 void* fmBoardConfigPtr;
 
@@ -90,19 +84,14 @@ void Boardconf::ResetToDefaultConfiguration()
     configuration.dcDcEnabled = false;
 
     //Now, we load all Default boards (nRf Development kits)
-<<<<<<< HEAD
-    setBoard_4(&configuration);
-    setBoard_18(&configuration);
-    setBoard_inuk(&configuration);
-
-=======
     SetBoard_4(&configuration);
     SetBoard_18(&configuration);
->>>>>>> master
+    SetBoard_inuk(&configuration);
+
 
 #ifdef SIM_ENABLED
 #ifndef GITHUB_RELEASE
-    SetBoard_19(&configuration);
+     (&configuration);
 #endif //GITHUB_RELEASE
 #endif
 

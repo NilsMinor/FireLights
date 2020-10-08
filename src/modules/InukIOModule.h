@@ -15,6 +15,7 @@
 #include <nrf_drv_gpiote.h>
 #include "../sdk/sdk14/components/drivers_nrf/pwm/nrf_drv_pwm.h"
 
+constexpr u8 INUK_IO_MODULE_CONFIG_VERSION = 1;
 
 // ADC 
 
@@ -93,13 +94,13 @@ class InukIOModule: public Module
 
         void setLIOManual (u8 level);
 
-		void ConfigurationLoadedHandler(ModuleConfiguration* migratableConfig, u16 migratableConfigLength) override;
+        void ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) override final;
 
 		void ResetToDefaultConfiguration() override;
 
 		void TimerEventHandler(u16 passedTimeDs) override;
 
-		void MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, connPacketHeader const * packetHeader) override;
+        void MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader) override;
 
         TerminalCommandHandlerReturnType TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize) override;
 

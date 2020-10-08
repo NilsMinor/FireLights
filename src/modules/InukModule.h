@@ -11,6 +11,9 @@
 #include <Module.h>
 #include <InukIOModule.h>
 
+constexpr VendorModuleId INUK_MODULE_ID = GET_VENDOR_MODULE_ID(0xAAAA, 2);
+constexpr u8 INUK_MODULE_CONFIG_VERSION = 1;
+
 class InukModule: public Module
 {
 	private:
@@ -88,13 +91,13 @@ class InukModule: public Module
 	public:
 		InukModule();
 
-		void ConfigurationLoadedHandler(ModuleConfiguration* migratableConfig, u16 migratableConfigLength) override;
+		void ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) override final;
 
 		void ResetToDefaultConfiguration() override;
 
 		void TimerEventHandler(u16 passedTimeDs) override;
 
-		void MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, connPacketHeader const * packetHeader) override;
+		void MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader) override;
 
 		#ifdef TERMINAL_ENABLED
 			TerminalCommandHandlerReturnType TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize) override;

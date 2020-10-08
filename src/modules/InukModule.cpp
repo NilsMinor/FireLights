@@ -13,7 +13,6 @@
 #include <InukTypes.h>
 #include <stdlib.h>
 
-constexpr u8 INUK_MODULE_CONFIG_VERSION = 1;
 
 InukModule::InukModule()
 	: Module(ModuleId::INUK_MODULE, "inuk")
@@ -50,10 +49,10 @@ void InukModule::ResetToDefaultConfiguration()
 	}
 }
 
-void InukModule::ConfigurationLoadedHandler(ModuleConfiguration* migratableConfig, u16 migratableConfigLength)
+void InukModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) 
 {
 	//Version migration can be added here, e.g. if module has version 2 and config is version 1
-	if(migratableConfig->moduleVersion == 1){/* ... */};
+	//if(migratableConfig->moduleVersion == 1){/* ... */};
 
 	//Do additional initialization upon loading the config
 }
@@ -182,13 +181,13 @@ void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 		(u16) configuration.followingLightId);
 }
 
-void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, connPacketHeader const * packetHeader)
+void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader)
 {
 	//Must call superclass for handling
 	Module::MeshMessageReceivedHandler(connection, sendData, packetHeader);
 
 	if(packetHeader->messageType == MessageType::MODULE_TRIGGER_ACTION){
-		connPacketModule const * packet = (connPacketModule const *)packetHeader;
+		ConnPacketModule const * packet = (ConnPacketModule const *)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId ){
@@ -235,7 +234,7 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 
 	//Parse Module responses
 	if(packetHeader->messageType == MessageType::MODULE_ACTION_RESPONSE){
-		connPacketModule const * packet = (connPacketModule const *)packetHeader;
+		ConnPacketModule const * packet = (ConnPacketModule const *)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId)

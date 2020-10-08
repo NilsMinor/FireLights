@@ -13,7 +13,6 @@
 #include <InukTypes.h>
 #include "app_util_platform.h"
 
-constexpr u8 INUKIO_MODULE_CONFIG_VERSION = 1;
 
 
 
@@ -46,15 +45,15 @@ void InukIOModule::ResetToDefaultConfiguration()
 	//Set default configuration values
 	configuration.moduleId = moduleId;
 	configuration.moduleActive = true;
-	configuration.moduleVersion = INUKIO_MODULE_CONFIG_VERSION;
+	configuration.moduleVersion = INUK_IO_MODULE_CONFIG_VERSION;
 
 	//Set additional config values...
 }
 
-void InukIOModule::ConfigurationLoadedHandler(ModuleConfiguration* migratableConfig, u16 migratableConfigLength)
+void InukIOModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength)
 {
 	//Version migration can be added here, e.g. if module has version 2 and config is version 1
-	if(migratableConfig->moduleVersion == 1){/* ... */};
+	//if(migratableConfig->moduleVersion == 1){/* ... */};
 
 	//Do additional initialization upon loading the config
 
@@ -106,25 +105,25 @@ void InukIOModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 
 }
 
-void InukIOModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, connPacketHeader const * packetHeader)
+void InukIOModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader) 
 {
 	//Must call superclass for handling
 	Module::MeshMessageReceivedHandler(connection, sendData, packetHeader);
 
-	if(packetHeader->messageType == MessageType::MODULE_TRIGGER_ACTION){
-		connPacketModule const * packet = (connPacketModule const *)packetHeader;
+	/* if(packetHeader->messageType == MessageType::MODULE_TRIGGER_ACTION){
+		ConnPacketModule const * packet = (ConnPacketModule const *)packetHeader;
 	}
 
 	//Parse Module responses
 	if(packetHeader->messageType == MessageType::MODULE_ACTION_RESPONSE){
-		connPacketModule const * packet = (connPacketModule const *)packetHeader;
+		ConnPacketModule const * packet = (ConnPacketModule const *)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId)
 		{
 			
 		}
-	}
+	} */
 }
 
 
@@ -452,7 +451,7 @@ void InukIOModule::initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5) {
 			logs("init pwm success");
 		}
 
-		pwm_seq_values.channel_0 = pwm_top_value;
+		pwm_seq_values.channel_0 = 50;//pwm_top_value;
 		pwm_seq_values.channel_1 = pwm_top_value;
 		pwm_seq_values.channel_2 = pwm_top_value;
 		pwm_seq_values.channel_3 = pwm_top_value;

@@ -20,7 +20,7 @@ void setCustomPinset_Inuk(CustomPins* pinConfig){
         pins->pirPin    = 16;   // high active
 }
 
-void setBoard_inuk(BoardConfiguration *c)
+void SetBoard_inuk(BoardConfiguration *c)
 {
 #if BOARD_TYPE == 10000
     if (c->boardType == 10000)
