@@ -80,11 +80,9 @@ void IoModule::TimerEventHandler(u16 passedTimeDs)
 
     //If the Beacon is in the enrollment network
     if(currentLedMode == LedMode::CONNECTIONS && GS->node.configuration.networkId == 1){
-
         GS->ledRed.On();
         GS->ledGreen.Off();
         GS->ledBlue.Off();
-
     }
     else if (currentLedMode == LedMode::CONNECTIONS)
     {

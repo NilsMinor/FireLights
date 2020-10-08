@@ -65,7 +65,7 @@ void setFeaturesetConfiguration_github_nrf52(ModuleConfiguration* config, void* 
         NodeConfiguration* c = (NodeConfiguration*) config;
         c->enrollmentState = EnrollmentState::ENROLLED;
         c->networkId = 11;
-        CheckedMemset(c->networkKey, 0x00, 16);
+        CheckedMemset(c->networkKey, 0x11, 16);
     }
 }
 

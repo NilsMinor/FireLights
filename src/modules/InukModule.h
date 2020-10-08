@@ -18,12 +18,16 @@ class InukModule: public Module
 		//Module configuration that is saved persistently (size must be multiple of 4)
 		struct InukModuleConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
+			u16 previousLightId;
+			u16 followingLightId;
 		};
 
 		InukModuleConfiguration configuration;
 
 		enum InukModuleTriggerActionMessages{
-			MESSAGE_TEST = 0
+			MESSAGE_TEST = 0,
+			MESSAGE_SET_LIGHT_LEVEL = 1,
+			MESSAGE_SET_PARTNER = 2
 		};
 
 		enum InukModuleActionResponseMessages{
@@ -40,6 +44,25 @@ class InukModule: public Module
 		#pragma pack(push)
 		#pragma pack(1)
 
+			// SET LIGHT LEVEL MESSAGE
+			#define SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE 1
+			typedef struct
+			{
+				u16 level;
+
+			}InukSetLightLevelMessage;
+			// SET LIGHT LEVEL MESSAGE
+
+			// SET PARTNER IDS MESSAGE
+			#define SIZEOF_INUK_SET_PARTNER_MESSAGE 4
+			typedef struct
+			{
+				u16 previousLightId;
+				u16 followingLightId;
+
+			}InukSetPartnerIDsMessage;
+			// SET PARTNER IDS MESSAGE
+
 			#define SIZEOF_INUK_MODULE_MESSAGE 10
 			typedef struct
 			{
@@ -53,13 +76,15 @@ class InukModule: public Module
 		#pragma pack(pop)
 		//####### Module messages end
 
+		InukLightModes mode;
 		InukStates currentState; 
 		InukIOModule * p_iioModule;
-
+		
 		void handleSM ( void );
-
 		static void pirCallback (u16 state);
 
+		void setLighLeveltManual (u8 level);
+		void setPartnerLights (u16 previousLightId, u16 followingLightId);
 	public:
 		InukModule();
 

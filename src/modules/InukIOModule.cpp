@@ -255,6 +255,15 @@ static uint16_t const              	pwm_top_value  = PWM_MAX_VALUE;
 static nrf_pwm_values_individual_t 	pwm_seq_values;
 static nrf_pwm_sequence_t      	   	pwm_seuqnce;
 static uint16_t						phase_channel = 0;
+
+
+void InukIOModule::setLIOManual (u8 level) {
+	this->lioState = LIOState::LIO_ON_MANUAL;
+	dynamicLevel = level;
+	this->pwmLightState = FADE_ON;
+	nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
+}
+
 void InukIOModule::setLIO (LIOState state) {
 
 	this->lioState = state;
@@ -262,7 +271,10 @@ void InukIOModule::setLIO (LIOState state) {
 	if (state == LIOState::LIO_ON || state == LIOState::LIO_GLOW) {
 		this->pwmLightState = IS_OFF;
 		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
-	} 
+	} else if (state == LIOState::LIO_ON_MANUAL) {
+		this->pwmLightState = IS_MANUAL;
+		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
+	}
 	else {
 		nrf_drv_pwm_stop (&m_pwm0, true);
 	}
@@ -281,7 +293,11 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 		uint16_t maxValue = this->pwmLightTimeSettings.maxGlowValue;
 		u32 step = maxValue * 10 / this->pwmLightTimeSettings.fadeOnTime;
 
-		if (this->pwmLightState == IS_OFF) {
+		if (dynamicLevel > 0) {
+			value = pwm_top_value - pwm_top_value / dynamicLevel;
+			p_channels[0] = value;
+		}
+		else if (this->pwmLightState == IS_OFF) {
 			this->pwm_counter = 0;
 			this->pwmLightState = GLOW_STARTED;
 			logs("change state to GLOW_STARTED");
@@ -320,7 +336,11 @@ void InukIOModule::lioStateMachine ( void ) {
 		uint16_t value = p_channels[channel];
 		u32 step = this->pwmLightTimeSettings.maxValue * 10 / this->pwmLightTimeSettings.fadeOnTime;
 
-		if (this->pwmLightState == IS_OFF) {
+
+		if (this->pwmLightState == IS_MANUAL) {
+
+		}
+		else if (this->pwmLightState == IS_OFF) {
 			this->pwm_counter = 0;
 			this->pwmLightState = FADE_ON;
 			logs("change state to FADE_ON");
@@ -369,7 +389,7 @@ void InukIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
 
     if (event_type == NRF_DRV_PWM_EVT_FINISHED)
     {
-		if (p_iio->lioState == LIO_ON) {
+		if (p_iio->lioState == LIO_ON || p_iio->lioState == LIO_ON_MANUAL) {
 			p_iio->lioStateMachine( );
 		} else if (p_iio->lioState == LIO_GLOW) {
 			p_iio->lioGlowStateMachine( );

@@ -25,6 +25,10 @@ InukModule::InukModule()
 	configurationPointer = &configuration;
 	configurationLength = sizeof(InukModuleConfiguration);
 
+	logs("Partner IDs are previousLightId :[ %u ] followingLightId : [ %u ]" ,
+		(u16) configuration.previousLightId, 
+		(u16) configuration.followingLightId);
+
 	//Set defaults
 	ResetToDefaultConfiguration();
 
@@ -36,6 +40,8 @@ void InukModule::ResetToDefaultConfiguration()
 	configuration.moduleId = moduleId;
 	configuration.moduleActive = true;
 	configuration.moduleVersion = INUK_MODULE_CONFIG_VERSION;
+
+	mode = InukLightModes::AUTOMATIC;
 
 	//Set additional config values...
 	this->p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
@@ -124,29 +130,57 @@ void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 }
 
 void InukModule::handleSM ( void ) {
-	switch (currentState)
-	{
-		case InukStates::ERROR :
-			logs("Inuk state ERROR");
-			break;
-		case InukStates::STARTED :
-			logs("Inuk state STARTED");
-		 
-			break;
-		case InukStates::WAITING_FOR_TRIGGER :
-			logs("Inuk state WAITING_FOR_TRIGGER");
-		 
-			break;
-		case InukStates::TRIGGER_OCCURED :
-			logs("Inuk state TRIGGER_OCCURED");
-		 
-			break;
-	
-		default:
-			break;
+
+	if (mode == InukLightModes::AUTOMATIC) {
+		switch (currentState)
+		{
+			case InukStates::ERROR :
+				logs("Inuk state ERROR");
+				break;
+			case InukStates::STARTED :
+				logs("Inuk state STARTED");
+			
+				break;
+			case InukStates::WAITING_FOR_TRIGGER :
+				logs("Inuk state WAITING_FOR_TRIGGER");
+			
+				break;
+			case InukStates::TRIGGER_OCCURED :
+				logs("Inuk state TRIGGER_OCCURED");
+			
+				break;
+		
+			default:
+				break;
+		}
+	} else if (mode == InukLightModes::MANUAL) {
+
 	}
+	
 }
 
+void InukModule::setLighLeveltManual (u8 level) {
+	// change mode to manual
+	mode = InukLightModes::MANUAL;
+
+	logs("setLightManual :  %u", level);
+	this->p_iioModule->setLIOManual(level);
+}
+
+void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
+	if (previousLightId) {
+		configuration.previousLightId = previousLightId;
+	}
+	if (followingLightId) {
+		configuration.followingLightId = followingLightId;
+	}
+
+	GS->config.SaveConfigToFlash(nullptr, 0, nullptr, 0);
+
+	logs("Partner IDs are previousLightId : [ %u ] followingLightId : [ %u ]" ,
+		(u16) configuration.previousLightId, 
+		(u16) configuration.followingLightId);
+}
 
 void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, connPacketHeader const * packetHeader)
 {
@@ -158,7 +192,17 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId ){
-			if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_TEST){
+
+			if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_PARTNER && sendData->dataLength >= SIZEOF_INUK_SET_PARTNER_MESSAGE){
+		 		InukSetPartnerIDsMessage const * packetData = (InukSetPartnerIDsMessage const *) (packet->data);
+				 this->setPartnerLights ((u16) packetData->previousLightId, (u16) packetData->followingLightId);
+			}
+			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_LIGHT_LEVEL && sendData->dataLength >= SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE){
+				InukSetLightLevelMessage const * packetData = (InukSetLightLevelMessage const *) (packet->data);
+				this->setLighLeveltManual ((u8) packetData->level);
+			}
+
+			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_TEST){
 				logs("Recived test message frome node %u",(u8) packet->moduleId);
 
 				InukModuleTriggerActionMessages actionType = (InukModuleTriggerActionMessages)packet->actionType;
@@ -184,9 +228,7 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 							this->p_iioModule->setLIO(LIOState::LIO_OFF);
 						}
 					}		
-				}
-
-					
+				}					
 			}
 		}
 	}

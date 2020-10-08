@@ -11,6 +11,10 @@ enum InukStates
 	WAITING_FOR_TRIGGER    	= 1,
 	TRIGGER_OCCURED      	= 2,
 } ; 
+enum InukLightModes {
+	AUTOMATIC = 0,
+	MANUAL = 1
+};
 
 struct InukExtPins : CustomPins {
     i16 lio1 = -1;
@@ -32,7 +36,8 @@ enum PIRState {
 enum LIOState {
 	LIO_ON = 0,
 	LIO_OFF = 1,
-	LIO_GLOW = 2
+	LIO_GLOW = 2,
+	LIO_ON_MANUAL = 3
 };
 enum PWMLightStates {
 	IS_OFF = 0,
@@ -40,6 +45,7 @@ enum PWMLightStates {
 	STAY_ON = 2,
 	FADE_OFF = 3,
 	SEQUENCE_FINISHED = 4,
+	IS_MANUAL = 5,
 
 	GLOW_STARTED = 10
 };

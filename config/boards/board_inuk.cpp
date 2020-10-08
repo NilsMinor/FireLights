@@ -28,7 +28,7 @@ void setBoard_inuk(BoardConfiguration *c)
         c->led1Pin = 26;
         c->led2Pin = 27;
         //c->led3Pin = 19;
-        c->ledActiveHigh = false;
+        c->ledActiveHigh = true;
         c->button1Pin = 25;
         c->buttonsActiveHigh = false;
 

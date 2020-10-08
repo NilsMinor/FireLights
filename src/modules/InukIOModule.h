@@ -51,6 +51,7 @@ class InukIOModule: public Module
         u16 vbat;
         PIRState pir;
         pirCallbackType pirCB = nullptr;
+        u8 dynamicLevel;
 
         u8 lioPins [5];
         i16 vsolarPin;
@@ -89,6 +90,8 @@ class InukIOModule: public Module
 
         void setLIO (LIOState state);
         LIOState getLIO ( void );
+
+        void setLIOManual (u8 level);
 
 		void ConfigurationLoadedHandler(ModuleConfiguration* migratableConfig, u16 migratableConfigLength) override;
 
