@@ -12,6 +12,7 @@
 #include <GlobalState.h>
 #include <InukTypes.h>
 #include <stdlib.h>
+#include <Config.h>
 
 
 InukModule::InukModule()
@@ -23,10 +24,6 @@ InukModule::InukModule()
 	//sizeof configuration must be a multiple of 4 bytes
 	configurationPointer = &configuration;
 	configurationLength = sizeof(InukModuleConfiguration);
-
-	logs("Partner IDs are previousLightId :[ %u ] followingLightId : [ %u ]" ,
-		(u16) configuration.previousLightId, 
-		(u16) configuration.followingLightId);
 
 	//Set defaults
 	ResetToDefaultConfiguration();
@@ -55,6 +52,11 @@ void InukModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratable
 	//if(migratableConfig->moduleVersion == 1){/* ... */};
 
 	//Do additional initialization upon loading the config
+
+	logs("Partner IDs are previousLightId :[ %u ] followingLightId : [ %u ]" ,
+		(u16) configuration.previousLightId, 
+		(u16) configuration.followingLightId);
+
 }
 
 void InukModule::TimerEventHandler(u16 passedTimeDs)
@@ -165,6 +167,27 @@ void InukModule::setLighLeveltManual (u8 level) {
 	logs("setLightManual :  %u", level);
 	this->p_iioModule->setLIOManual(level);
 }
+void InukModule::saveModuleConfiguration (void) {
+	 //Save the module config to flash
+	const RecordStorageResultCode err = Utility::SaveModuleSettingsToFlash(
+                        this,
+                        this->configurationPointer,
+                        this->configurationLength,
+                        nullptr,
+                        0,
+                        nullptr,
+                        0);
+
+	logs("saveModuleConfiguration : %u" , (u8) err);
+	/*if (err == RecordStorageResultCode::SUCCESS)
+	{
+		 logs("saveModuleConfiguration success [ %d ]" ,err);
+	}
+	else
+	{
+		 logs("saveModuleConfiguration error [ %d ]" ,err);
+	}*/
+}
 
 void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 	if (previousLightId) {
@@ -174,7 +197,7 @@ void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 		configuration.followingLightId = followingLightId;
 	}
 
-	GS->config.SaveConfigToFlash(nullptr, 0, nullptr, 0);
+ 	saveModuleConfiguration ();
 
 	logs("Partner IDs are previousLightId : [ %u ] followingLightId : [ %u ]" ,
 		(u16) configuration.previousLightId, 

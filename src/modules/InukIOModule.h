@@ -55,6 +55,7 @@ class InukIOModule: public Module
         u8 dynamicLevel;
 
         u8 lioPins [5];
+        u16 lightLevels [5];
         i16 vsolarPin;
         i16 vbatPin;
         i16 pirPin;
@@ -80,6 +81,7 @@ class InukIOModule: public Module
         void initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5);
         static void pwm_handler(nrf_drv_pwm_evt_type_t event_type);
         void lioStateMachine ( void );
+        void lioManualStateMachine ( void );
         void lioGlowStateMachine ( void );
         u32 pwm_counter;
 

@@ -88,6 +88,7 @@ class InukModule: public Module
 
 		void setLighLeveltManual (u8 level);
 		void setPartnerLights (u16 previousLightId, u16 followingLightId);
+		void saveModuleConfiguration( void );
 	public:
 		InukModule();
 
