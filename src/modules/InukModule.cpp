@@ -111,23 +111,23 @@ void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 	logs("ButtonHandler %d", holdTimeDs);
 
 	// create data
-	InukModuleMessage data;
-	data.vsolar = 1111;
-	data.vbat   = 1234;
-	data.lightCommandMessage   = InukLightMessages::PIR_TRIGGER;
+	// InukModuleMessage data;
+	// data.vsolar = 1111;
+	// data.vbat   = 1234;
+	// data.lightCommandMessage   = InukLightMessages::PIR_TRIGGER;
 
-	u8 targetNodeId = NODE_ID_BROADCAST;
+	// u8 targetNodeId = NODE_ID_BROADCAST;
 
-	//Send ping packet to that node
-	SendModuleActionMessage(
-			MessageType::MODULE_TRIGGER_ACTION,
-			targetNodeId,
-			InukModuleTriggerActionMessages::MESSAGE_TEST,
-			0,
-			(u8*)&data,
-			SIZEOF_INUK_MODULE_MESSAGE,
-			false
-	);
+	// //Send ping packet to that node
+	// SendModuleActionMessage(
+	// 		MessageType::MODULE_TRIGGER_ACTION,
+	// 		targetNodeId,
+	// 		InukModuleTriggerActionMessages::MESSAGE_TEST,
+	// 		0,
+	// 		(u8*)&data,
+	// 		SIZEOF_INUK_MODULE_MESSAGE,
+	// 		false
+	// );
 }
 
 void InukModule::handleSM ( void ) {
@@ -167,8 +167,10 @@ void InukModule::setLighLeveltManual (u8 level) {
 	logs("setLightManual :  %u", level);
 	this->p_iioModule->setLIOManual(level);
 }
+
 void InukModule::saveModuleConfiguration (void) {
 	 //Save the module config to flash
+
 	const RecordStorageResultCode err = Utility::SaveModuleSettingsToFlash(
                         this,
                         this->configurationPointer,
@@ -179,14 +181,27 @@ void InukModule::saveModuleConfiguration (void) {
                         0);
 
 	logs("saveModuleConfiguration : %u" , (u8) err);
-	/*if (err == RecordStorageResultCode::SUCCESS)
-	{
-		 logs("saveModuleConfiguration success [ %d ]" ,err);
-	}
-	else
-	{
-		 logs("saveModuleConfiguration error [ %d ]" ,err);
-	}*/
+}
+
+void InukModule::sendDeviceInfoPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
+
+	InukDeviceInfoMessage data;
+	data.nodeId = targetNode;
+	data.vsolar = p_iioModule->getSolarVoltage();
+	data.vbat   = p_iioModule->getBatteryVoltage();
+	//data.pirState = p_iioModule->getPirSensorState();
+
+	logs("sendDeviceInfoPacket [ vsolar : %u ] [ vbat : %u ] [ pirState : %u ]", data.vsolar, data.vbat, data.pirState);
+
+	 SendModuleActionMessage(
+        MessageType::MODULE_ACTION_RESPONSE,
+        senderNode,
+        (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
+        requestHandle,
+        (u8*)&data,
+        SIZEOF_INUK_DEVICE_INFO_MESSAGE-1,
+        false
+    );
 }
 
 void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
@@ -223,35 +238,39 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 				InukSetLightLevelMessage const * packetData = (InukSetLightLevelMessage const *) (packet->data);
 				this->setLighLeveltManual ((u8) packetData->level);
 			}
-
-			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_TEST){
-				logs("Recived test message frome node %u",(u8) packet->moduleId);
-
-				InukModuleTriggerActionMessages actionType = (InukModuleTriggerActionMessages)packet->actionType;
-				u16 dataFieldLength = sendData->dataLength - SIZEOF_CONN_PACKET_MODULE;
-
-				if (actionType == InukModuleTriggerActionMessages::MESSAGE_TEST) {
-
-					//Parse the data and set the gpio ports to the requested
-					InukModuleMessage const * packetData = (InukModuleMessage const *) (packet->data);
-				
-					logs("got test message with packetData | lightCommandMessage %u, vsolar %u, vbat %u",
-						(u16) packetData->lightCommandMessage,
-						(u16) packetData->vsolar,
-						(u16) packetData->vbat
-					);
-
-					if (this->p_iioModule){
-						LIOState s = this->p_iioModule->getLIO();
-						if (s == LIOState::LIO_OFF) {
-							this->p_iioModule->setLIO(LIOState::LIO_ON);
-							//this->p_iioModule->setLIO(LIOState::LIO_GLOW);
-						} else {
-							this->p_iioModule->setLIO(LIOState::LIO_OFF);
-						}
-					}		
-				}					
+			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_GET_DEVICE_INFO && sendData->dataLength >= SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE){
+				InukGetDeviceInfoMessage const * packetData = (InukGetDeviceInfoMessage const *) (packet->data);
+				this->sendDeviceInfoPacket(packet->header.sender, packetData->nodeId, packet->requestHandle);
 			}
+
+			// else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_TEST){
+			// 	logs("Recived test message frome node %u",(u8) packet->moduleId);
+
+			// 	InukModuleTriggerActionMessages actionType = (InukModuleTriggerActionMessages)packet->actionType;
+			// 	u16 dataFieldLength = sendData->dataLength - SIZEOF_CONN_PACKET_MODULE;
+
+			// 	if (actionType == InukModuleTriggerActionMessages::MESSAGE_TEST) {
+
+			// 		//Parse the data and set the gpio ports to the requested
+			// 		InukModuleMessage const * packetData = (InukModuleMessage const *) (packet->data);
+				
+			// 		logs("got test message with packetData | lightCommandMessage %u, vsolar %u, vbat %u",
+			// 			(u16) packetData->lightCommandMessage,
+			// 			(u16) packetData->vsolar,
+			// 			(u16) packetData->vbat
+			// 		);
+
+			// 		if (this->p_iioModule){
+			// 			LIOState s = this->p_iioModule->getLIO();
+			// 			if (s == LIOState::LIO_OFF) {
+			// 				this->p_iioModule->setLIO(LIOState::LIO_ON);
+			// 				//this->p_iioModule->setLIO(LIOState::LIO_GLOW);
+			// 			} else {
+			// 				this->p_iioModule->setLIO(LIOState::LIO_OFF);
+			// 			}
+			// 		}		
+			// 	}					
+			// }
 		}
 	}
 

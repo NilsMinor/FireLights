@@ -29,7 +29,7 @@ constexpr u8 INUK_IO_MODULE_CONFIG_VERSION = 1;
 #define R2_VSOLAR                   806000
 
 #define ADC_REFRESH_DS              100
-#define ADC_UPDATE_INTERVALL_SEC    20
+#define ADC_UPDATE_INTERVALL_SEC    10
 
 // PWM
 
@@ -90,6 +90,11 @@ class InukIOModule: public Module
 
 	public:
 		InukIOModule();
+
+
+        u16 getSolarVoltage ( void );
+        u16 getBatteryVoltage ( void );
+        u8 getPirSensorState ( void );
 
         void setLIO (LIOState state);
         LIOState getLIO ( void );

@@ -30,11 +30,14 @@ class InukModule: public Module
 		enum InukModuleTriggerActionMessages{
 			MESSAGE_TEST = 0,
 			MESSAGE_SET_LIGHT_LEVEL = 1,
-			MESSAGE_SET_PARTNER = 2
+			MESSAGE_SET_PARTNER = 2,
+
+			MESSAGE_GET_DEVICE_INFO = 10,
 		};
 
 		enum InukModuleActionResponseMessages{
-			MESSAGE_TEST_RESPONSE = 0
+			MESSAGE_TEST_RESPONSE = 0,
+			MESSAGE_DEVICE_INFO_RESPONSE = 20,
 		};
 
 		enum InukLightMessages {
@@ -48,7 +51,7 @@ class InukModule: public Module
 		#pragma pack(1)
 
 			// SET LIGHT LEVEL MESSAGE
-			#define SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE 1
+			#define SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE 2
 			typedef struct
 			{
 				u16 level;
@@ -66,15 +69,34 @@ class InukModule: public Module
 			}InukSetPartnerIDsMessage;
 			// SET PARTNER IDS MESSAGE
 
-			#define SIZEOF_INUK_MODULE_MESSAGE 10
+
+			// GET DEVICE INFO
+			#define SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE 2
 			typedef struct
 			{
-				//Insert values here
+				u16 nodeId;
+			}InukGetDeviceInfoMessage;
+
+			#define SIZEOF_INUK_DEVICE_INFO_MESSAGE 7
+			typedef struct
+			{
+				u16 nodeId;
 				u16 vsolar;
 				u16 vbat;
-				u16 lightCommandMessage;
+				u8 pirState;
 
-			}InukModuleMessage;
+			}InukDeviceInfoMessage;
+			// GET DEVICE INFO
+
+			// #define SIZEOF_INUK_MODULE_MESSAGE 10
+			// typedef struct
+			// {
+			// 	//Insert values here
+			// 	u16 vsolar;
+			// 	u16 vbat;
+			// 	u16 lightCommandMessage;
+
+			// }InukModuleMessage;
 
 		#pragma pack(pop)
 		//####### Module messages end
@@ -89,6 +111,8 @@ class InukModule: public Module
 		void setLighLeveltManual (u8 level);
 		void setPartnerLights (u16 previousLightId, u16 followingLightId);
 		void saveModuleConfiguration( void );
+		void sendDeviceInfoPacket ( NodeId toNode, NodeId targetNode, u8 requestHandle );
+
 	public:
 		InukModule();
 

@@ -35,7 +35,7 @@ InukIOModule::InukIOModule()
     this->InitADC( inukPinConfig.vbatPin, inukPinConfig.vsolarPin );
     this->initPIR( inukPinConfig.pirPin );
 	this->initPWM (inukPinConfig.lio1, inukPinConfig.lio2, inukPinConfig.lio3,
-					inukPinConfig.lio4, inukPinConfig.lio5);
+				   inukPinConfig.lio4, inukPinConfig.lio5);
 
 
 }
@@ -189,6 +189,18 @@ void InukIOModule::selectADC (i16 adcChannel) {
 u16 InukIOModule::toMilliVolts(u16 rawValue, u32 Resistor1, u32 Resistor2) {
 	double voltageDividerDv =  (double(Resistor1 + Resistor2)) / double(Resistor2);
 	return  u16( rawValue * ADC_REF / (1023) * voltageDividerDv ) ;
+}
+
+u16 InukIOModule::getSolarVoltage ( void ) {
+	return vsolar;
+}
+
+u16 InukIOModule::getBatteryVoltage ( void ) {
+	return vbat;
+}
+
+u8 InukIOModule::getPirSensorState ( void ) {
+	return (u8)pir;
 }
 
 // PIR driver 
@@ -363,7 +375,6 @@ void InukIOModule::lioManualStateMachine ( void ) {
 		// finished
 	}
 }
-
 
 void InukIOModule::lioStateMachine ( void ) {
 	

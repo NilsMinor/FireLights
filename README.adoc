@@ -1,16 +1,15 @@
 
 This project is based on fruitymesh, a bluetooth low energy mesh based on direct connections. It is used as firmware for custom
-light nodes. The implemantation is work in progress and uses the branch **firelight**
+light nodes. The implementation is work in progress and uses the branch **firelight**
 
-This implemantation uses custom modules, custom board config and messages. The firmware also implements PWM controlling for dimming LEDs.
+This implementation uses custom modules, custom board config and messages. The firmware also implements PWM controlling for dimming LEDs.
 
 ## messages
 
 ...
 
-Mor information on fruitymesh can be found here:
+Mor information on fruitymesh can be found in the https://www.bluerange.io/docs/bluerange-firmware/index.html[fruitymesh documentation]
 
-https://www.bluerange.io/docs/bluerange-firmware/index.html[Documentation]
 
 
 
