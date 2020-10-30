@@ -33,12 +33,20 @@ enum PIRState {
 	PIR_OFF = 1
 };
 
+enum LIOLightMode {
+	LIGHT_MODE = 0,
+	GLOW_MODE = 1,
+	MANUAL_MODE = 2
+};
+
+
 enum LIOState {
 	LIO_ON = 0,
 	LIO_OFF = 1,
 	LIO_GLOW = 2,
 	LIO_ON_MANUAL = 3
 };
+
 enum PWMLightStates {
 	IS_OFF = 0,
 	FADE_ON = 1,
@@ -47,9 +55,11 @@ enum PWMLightStates {
 	SEQUENCE_FINISHED = 4,
 	IS_MANUAL = 5,
 
+	// Manual states
 	MANUAL_START = 6,
 	MANUAL_FADING = 7,
 	MANUAL_STOPPED = 8,
+	
 
 	GLOW_STARTED = 10
 };

@@ -77,10 +77,13 @@ class InukIOModule: public Module
 
         bool pwmInitialized;
         nrf_pwm_sequence_t pwmSequence;
+        LIOLightMode lioMode;
         LIOState lioState;
+        bool animationIsRunning;
+
         void initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5);
         static void pwm_handler(nrf_drv_pwm_evt_type_t event_type);
-        void lioStateMachine ( void );
+        void lioAutomaticStateMachine ( void );
         void lioManualStateMachine ( void );
         void lioGlowStateMachine ( void );
         u32 pwm_counter;
@@ -96,10 +99,15 @@ class InukIOModule: public Module
         u16 getBatteryVoltage ( void );
         u8 getPirSensorState ( void );
 
+
         void setLIO (LIOState state);
         LIOState getLIO ( void );
 
         void setLIOManual (u8 level);
+        void setLIOGlow(bool run);
+        void setLIOLightMode (bool run);
+        bool getAnimationIsRunning(void);
+
 
         void ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) override final;
 

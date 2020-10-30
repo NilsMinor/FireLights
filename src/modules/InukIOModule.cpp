@@ -35,9 +35,9 @@ InukIOModule::InukIOModule()
     this->InitADC( inukPinConfig.vbatPin, inukPinConfig.vsolarPin );
     this->initPIR( inukPinConfig.pirPin );
 	this->initPWM (inukPinConfig.lio1, inukPinConfig.lio2, inukPinConfig.lio3,
-				   inukPinConfig.lio4, inukPinConfig.lio5);
+				  inukPinConfig.lio4, inukPinConfig.lio5);
 
-
+	animationIsRunning = false;
 }
 
 void InukIOModule::ResetToDefaultConfiguration()
@@ -268,11 +268,39 @@ static nrf_pwm_sequence_t      	   	pwm_seuqnce;
 static uint16_t						phase_channel = 0;
 
 
+bool InukIOModule::getAnimationIsRunning (void) {
+	return animationIsRunning;
+}
+
 void InukIOModule::setLIOManual (u8 level) {
-	this->lioState = LIOState::LIO_ON_MANUAL;
+	this->lioMode = MANUAL_MODE;
 	this->pwmLightState = MANUAL_START;
 	nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
 	dynamicLevel = level;
+}
+
+void InukIOModule::setLIOGlow(bool run) {
+	animationIsRunning = run;
+	if (run) {
+		this->lioMode = GLOW_MODE;
+		this->pwmLightState = IS_OFF;
+		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
+	}
+	else {
+		nrf_drv_pwm_stop (&m_pwm0, true);
+	}
+}
+void InukIOModule::setLIOLightMode (bool run) {
+	animationIsRunning = run;
+	if (run) {
+		this->lioMode = LIGHT_MODE;
+		this->pwmLightState = IS_OFF;
+		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
+	}
+	else {
+		nrf_drv_pwm_stop (&m_pwm0, true);
+	}
+	
 }
 
 void InukIOModule::setLIO (LIOState state) {
@@ -300,7 +328,6 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 		uint16_t * p_channels = (uint16_t *)&pwm_seq_values;
 		uint16_t value = p_channels[phase_channel];
 		uint16_t maxValue = this->pwmLightTimeSettings.maxGlowValue;
-		u32 step = maxValue * 10 / this->pwmLightTimeSettings.fadeOnTime;
 
 		if (this->pwmLightState == IS_OFF) {
 			this->pwm_counter = 0;
@@ -309,8 +336,9 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 			value = pwm_top_value;
 		} else if (this->pwmLightState == GLOW_STARTED && this->pwm_counter % 6 == 0) {
 			uint16_t rand =  Utility::GetRandomInteger();
-
-			value = pwm_top_value - (rand % maxValue + maxValue / 2) ;
+			uint16_t lastValue = p_channels[phase_channel];
+			
+			value = pwm_top_value - (rand % maxValue / 10) ;
 			
 			phase_channel = (phase_channel+1) % 4;
 			p_channels[phase_channel] = value;
@@ -344,6 +372,7 @@ void InukIOModule::lioManualStateMachine ( void ) {
 		lightLevels[channel] = p_channels[channel];
 		this->pwm_counter = 0;
 		this->pwmLightState = MANUAL_FADING;
+		logs("change state to MANUAL_FADING : %u", lightLevels[channel]);
 
 	} else if (this->pwmLightState == MANUAL_FADING && this->pwm_counter % this->pwmLightTimeSettings.refreshInterval == 0) {
 		// fade lights to target value
@@ -357,7 +386,6 @@ void InukIOModule::lioManualStateMachine ( void ) {
 		} else {
 			value += delta / 50;
 		}
-		
 		
 		if (fadeHigh && value > targetLevel) {	
 			p_channels[channel] = value;
@@ -376,7 +404,7 @@ void InukIOModule::lioManualStateMachine ( void ) {
 	}
 }
 
-void InukIOModule::lioStateMachine ( void ) {
+void InukIOModule::lioAutomaticStateMachine ( void ) {
 	
 	this->pwm_counter++;
 
@@ -436,14 +464,17 @@ void InukIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
 
     if (event_type == NRF_DRV_PWM_EVT_FINISHED)
     {
-		if (p_iio->lioState == LIO_ON) {
-			p_iio->lioStateMachine( );
-		} else if (p_iio->lioState == LIO_ON_MANUAL) {
-			p_iio->lioManualStateMachine();
-		} 
-		else if (p_iio->lioState == LIO_GLOW) {
-			p_iio->lioGlowStateMachine( );
-		}		 
+		switch((i16) p_iio->lioMode) {
+			case MANUAL_MODE:
+				p_iio->lioManualStateMachine( );
+			break;
+			case LIGHT_MODE:
+				p_iio->lioAutomaticStateMachine( );
+			break;
+			case GLOW_MODE:
+				p_iio->lioGlowStateMachine( );
+			break;
+		}	 
     }
 }
 
@@ -463,7 +494,7 @@ void InukIOModule::initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5) {
 	pwmLightTimeSettings.fadeOnTime  	= 1000;
 	pwmLightTimeSettings.stayOnTime	 	= 2000;
 	pwmLightTimeSettings.fadeOffTime 	= 1000;
-	pwmLightTimeSettings.glowTime 		= 3000;
+	pwmLightTimeSettings.glowTime 		= 5000;
 	pwmLightTimeSettings.maxGlowValue	= pwm_top_value / 20;
 	pwmLightTimeSettings.maxValue 		= pwm_top_value / 5;
 

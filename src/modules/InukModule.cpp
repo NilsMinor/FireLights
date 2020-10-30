@@ -110,6 +110,9 @@ void InukModule::pirCallback (u16 state) {
 void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 	logs("ButtonHandler %d", holdTimeDs);
 
+	bool isRunning = this->p_iioModule->getAnimationIsRunning();
+	this->p_iioModule->setLIOGlow(!isRunning);
+
 	// create data
 	// InukModuleMessage data;
 	// data.vsolar = 1111;
@@ -189,9 +192,30 @@ void InukModule::sendDeviceInfoPacket (  NodeId senderNode, NodeId targetNode, u
 	data.nodeId = targetNode;
 	data.vsolar = p_iioModule->getSolarVoltage();
 	data.vbat   = p_iioModule->getBatteryVoltage();
-	//data.pirState = p_iioModule->getPirSensorState();
+	data.pirState = p_iioModule->getPirSensorState();
 
 	logs("sendDeviceInfoPacket [ vsolar : %u ] [ vbat : %u ] [ pirState : %u ]", data.vsolar, data.vbat, data.pirState);
+
+	 SendModuleActionMessage(
+        MessageType::MODULE_ACTION_RESPONSE,
+        senderNode,
+        (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
+        requestHandle,
+        (u8*)&data,
+        SIZEOF_INUK_DEVICE_INFO_MESSAGE,
+        false
+    );
+}
+
+void InukModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
+
+	InukSetPartnerIDsMessage data;
+	data.nodeId = targetNode;
+	data.previousLightId = (u16) configuration.previousLightId;
+	data.followingLightId = (u16) configuration.followingLightId;
+
+	logs("sendPartnerIdsPacket [ nodeId : %u ] [ previousLightId : %u ] [ followingLightId : %u ]", 
+			data.nodeId, data.previousLightId, data.followingLightId);
 
 	 SendModuleActionMessage(
         MessageType::MODULE_ACTION_RESPONSE,
@@ -232,7 +256,7 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 
 			if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_PARTNER && sendData->dataLength >= SIZEOF_INUK_SET_PARTNER_MESSAGE){
 		 		InukSetPartnerIDsMessage const * packetData = (InukSetPartnerIDsMessage const *) (packet->data);
-				 this->setPartnerLights ((u16) packetData->previousLightId, (u16) packetData->followingLightId);
+				this->setPartnerLights ((u16) packetData->previousLightId, (u16) packetData->followingLightId);
 			}
 			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_LIGHT_LEVEL && sendData->dataLength >= SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE){
 				InukSetLightLevelMessage const * packetData = (InukSetLightLevelMessage const *) (packet->data);
@@ -240,37 +264,18 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 			}
 			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_GET_DEVICE_INFO && sendData->dataLength >= SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE){
 				InukGetDeviceInfoMessage const * packetData = (InukGetDeviceInfoMessage const *) (packet->data);
-				this->sendDeviceInfoPacket(packet->header.sender, packetData->nodeId, packet->requestHandle);
-			}
+				logs("messgatype MESSAGE_GET_DEVICE_INFO [ sender : %u ] [ deviceInfoType : %u ] ", packet->header.sender, packetData->deviceInfoType);
+				switch ((u16)packetData->deviceInfoType) {
+					case GET_DEVICE_INFO:
+						this->sendDeviceInfoPacket(packet->header.sender, packetData->nodeId, packet->requestHandle);
+					break;
 
-			// else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_TEST){
-			// 	logs("Recived test message frome node %u",(u8) packet->moduleId);
-
-			// 	InukModuleTriggerActionMessages actionType = (InukModuleTriggerActionMessages)packet->actionType;
-			// 	u16 dataFieldLength = sendData->dataLength - SIZEOF_CONN_PACKET_MODULE;
-
-			// 	if (actionType == InukModuleTriggerActionMessages::MESSAGE_TEST) {
-
-			// 		//Parse the data and set the gpio ports to the requested
-			// 		InukModuleMessage const * packetData = (InukModuleMessage const *) (packet->data);
+					case GET_PARTNER_IDS:
+						this->sendPartnerIdsPacket(packet->header.sender, packetData->nodeId, packet->requestHandle);
+					break;
+				}
 				
-			// 		logs("got test message with packetData | lightCommandMessage %u, vsolar %u, vbat %u",
-			// 			(u16) packetData->lightCommandMessage,
-			// 			(u16) packetData->vsolar,
-			// 			(u16) packetData->vbat
-			// 		);
-
-			// 		if (this->p_iioModule){
-			// 			LIOState s = this->p_iioModule->getLIO();
-			// 			if (s == LIOState::LIO_OFF) {
-			// 				this->p_iioModule->setLIO(LIOState::LIO_ON);
-			// 				//this->p_iioModule->setLIO(LIOState::LIO_GLOW);
-			// 			} else {
-			// 				this->p_iioModule->setLIO(LIOState::LIO_OFF);
-			// 			}
-			// 		}		
-			// 	}					
-			// }
+			}
 		}
 	}
 
