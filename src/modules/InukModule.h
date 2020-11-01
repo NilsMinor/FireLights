@@ -31,7 +31,8 @@ class InukModule: public Module
 			MESSAGE_TEST = 0,
 			MESSAGE_SET_LIGHT_LEVEL = 1,
 			MESSAGE_SET_PARTNER = 2,
-
+			MESSAGE_PARTNER_NOTIFICATION = 3,
+			MESSAGE_PING_LIGHT = 4,
 			MESSAGE_GET_DEVICE_INFO = 10,
 		};
 
@@ -47,6 +48,10 @@ class InukModule: public Module
 		enum InukDeviceInfoTypes {
 			GET_DEVICE_INFO = 0,
 			GET_PARTNER_IDS = 1
+		};
+
+		enum PartnerNotificationEventType {
+			INDIVIDUAL_RECOGNIZED = 1
 		};
 		
 
@@ -80,6 +85,17 @@ class InukModule: public Module
 				u16 nodeId;
 				u16 deviceInfoType;
 			} InukGetDeviceInfoMessage;
+			// GET DEVICE INFO
+
+			// PARTNER NOTIFICATION MESSAGE
+			#define SIZEOF_PARTNER_NOTIFICATION_MESSAGE 7
+			typedef struct
+			{
+				u8 eventType;
+				u32 timeStamp;
+				u16 pace;
+			}InukPartnerNotificationMessage;
+			// PARTNER NOTIFICATION MESSAGE
 
 			#define SIZEOF_INUK_DEVICE_INFO_MESSAGE 7
 			typedef struct
@@ -90,7 +106,14 @@ class InukModule: public Module
 				u8 pirState;
 
 			}InukDeviceInfoMessage;
-			// GET DEVICE INFO
+
+			#define SIZEOF_PING_MESSAGE 2
+			typedef struct
+			{
+				u16 timeoutInMs;
+
+			}InukPingLightMessage;
+			 
 
 		#pragma pack(pop)
 		//####### Module messages end
@@ -98,6 +121,7 @@ class InukModule: public Module
 		InukLightModes mode;
 		InukStates currentState; 
 		InukIOModule * p_iioModule;
+		NodeId notifiedPartnerId;
 		
 		void handleSM ( void );
 		static void pirCallback (u16 state);
@@ -107,6 +131,9 @@ class InukModule: public Module
 		void saveModuleConfiguration( void );
 		void sendDeviceInfoPacket ( NodeId senderNode, NodeId targetNode, u8 requestHandle );
 		void sendPartnerIdsPacket ( NodeId senderNode, NodeId targetNode, u8 requestHandle ); 
+		void sendGlowNotificationToPartner ( );
+		void handlePartnerNotificationMessage (NodeId senderNode, const InukPartnerNotificationMessage *packetData);
+		void handlePIRCallback(u16 pirState);
 
 	public:
 		InukModule();

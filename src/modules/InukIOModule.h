@@ -16,6 +16,8 @@
 #include "../sdk/sdk14/components/drivers_nrf/pwm/nrf_drv_pwm.h"
 
 constexpr u8 INUK_IO_MODULE_CONFIG_VERSION = 1;
+#define PI                 3.14159265358979f
+
 
 // ADC 
 
@@ -50,7 +52,7 @@ class InukIOModule: public Module
 
         u16 vsolar;
         u16 vbat;
-        PIRState pir;
+        PIRState pirState;
         pirCallbackType pirCB = nullptr;
         u8 dynamicLevel;
 
@@ -80,12 +82,15 @@ class InukIOModule: public Module
         LIOLightMode lioMode;
         LIOState lioState;
         bool animationIsRunning;
-
+        uint16_t pingTimeOut;
+        
         void initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5);
         static void pwm_handler(nrf_drv_pwm_evt_type_t event_type);
         void lioAutomaticStateMachine ( void );
         void lioManualStateMachine ( void );
         void lioGlowStateMachine ( void );
+       
+        void lioPingStateMachine ( void );
         u32 pwm_counter;
 
         PWMLightStates pwmLightState;
@@ -99,14 +104,13 @@ class InukIOModule: public Module
         u16 getBatteryVoltage ( void );
         u8 getPirSensorState ( void );
 
-
-        void setLIO (LIOState state);
-        LIOState getLIO ( void );
-
         void setLIOManual (u8 level);
         void setLIOGlow(bool run);
         void setLIOLightMode (bool run);
         bool getAnimationIsRunning(void);
+         void lioPing (uint16_t timeOut);
+
+        void triggerPIRManual ();
 
 
         void ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) override final;

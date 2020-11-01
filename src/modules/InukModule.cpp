@@ -24,6 +24,7 @@ InukModule::InukModule()
 	//sizeof configuration must be a multiple of 4 bytes
 	configurationPointer = &configuration;
 	configurationLength = sizeof(InukModuleConfiguration);
+	notifiedPartnerId = 0;
 
 	//Set defaults
 	ResetToDefaultConfiguration();
@@ -99,20 +100,43 @@ void InukModule::TimerEventHandler(u16 passedTimeDs)
 #endif
 
 void InukModule::pirCallback (u16 state) {
-	logs("pirCallback %u", (u16 )state);
-	// InukIOModule * p_iio = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
-	// if (p_iio != nullptr) {
-	// 	//this->p_iioModule->setLIO(LIOState::LIO_ON);
-	// 	p_iio->setLIO(LIOState::LIO_ON);
-	// }
+	
+
+	InukModule * p_mod = (InukModule *)GS->node.GetModuleById(ModuleId::INUK_MODULE);
+
+	if (p_mod) {
+		p_mod->handlePIRCallback((u16 )state);
+	}
+
+	 /*InukIOModule * p_iio = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+	 if (p_iio != nullptr) {
+		 if (p_iio->getPirSensorState() == PIR_ON) {
+			 p_iio->setLIOLightMode(true);
+			
+		 }  
+	}*/
+}
+
+void InukModule::handlePIRCallback(u16 pirState) {
+	logs("handlePIRCallback %u", (u16 )pirState);
+	if (pirState == PIR_ON) {
+		bool animationIsRunning = p_iioModule->getAnimationIsRunning();
+		if (animationIsRunning) {
+			p_iioModule->setLIOGlow(false);// stop animation
+		}
+
+		p_iioModule->setLIOLightMode(true);
+		this->sendGlowNotificationToPartner();
+	}
+	 
 }
 
 void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 	logs("ButtonHandler %d", holdTimeDs);
+	this->p_iioModule->triggerPIRManual();
+	//this->p_iioModule->lioPing(1000);
 
-	bool isRunning = this->p_iioModule->getAnimationIsRunning();
-	this->p_iioModule->setLIOGlow(!isRunning);
-
+	
 	// create data
 	// InukModuleMessage data;
 	// data.vsolar = 1111;
@@ -223,9 +247,63 @@ void InukModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u
         (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
         requestHandle,
         (u8*)&data,
-        SIZEOF_INUK_DEVICE_INFO_MESSAGE-1,
+        SIZEOF_INUK_DEVICE_INFO_MESSAGE,
         false
     );
+}
+
+void InukModule::sendGlowNotificationToPartner ( ) {
+
+	// get partner IDs
+	uint16_t previousLightId = configuration.previousLightId;
+	uint16_t followingLightId = configuration.followingLightId;
+	uint16_t targetNodeId = 0;
+
+	logs("Partner IDs are previousLightId : [ %u ] followingLightId : [ %u ] notifiedPartnerId : [ %u ]" ,
+		(u16) configuration.previousLightId, (u16) configuration.followingLightId, (u16) notifiedPartnerId);
+
+	// direction --> [previous light] - [this light] - [following light]
+
+	InukPartnerNotificationMessage data;
+	data.eventType = (u8) PartnerNotificationEventType::INDIVIDUAL_RECOGNIZED;
+	data.timeStamp = (u32) 123456;
+	data.pace = (u16) 5;
+
+	if ((followingLightId != 0 && notifiedPartnerId == followingLightId) || (notifiedPartnerId == 0 && previousLightId != 0)) {	
+		// notifier was the previous light
+		logs("send notification packet to previousLightId : [ %u ] eventType : [ %u ] timeStamp : [ %u ] pace : [ %u ]" ,
+			(u16) targetNodeId, (u8) data.eventType, (u32) data.timeStamp, (u16) data.pace);
+		// send message
+		SendModuleActionMessage(
+			MessageType::MODULE_TRIGGER_ACTION,
+			previousLightId,
+			(u8)InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
+			0,
+			(u8*)&data,
+			SIZEOF_PARTNER_NOTIFICATION_MESSAGE,
+			false);
+	}
+	if ((previousLightId != 0 && notifiedPartnerId == previousLightId) || (notifiedPartnerId == 0 && followingLightId != 0 )) {
+		// notifier was the following light
+
+		logs("send notification packet to followingLightId : [ %u ] eventType : [ %u ] timeStamp : [ %u ] pace : [ %u ]" ,
+			(u16) targetNodeId, (u8) data.eventType, (u32) data.timeStamp, (u16) data.pace);
+		// send message
+		SendModuleActionMessage(
+			MessageType::MODULE_TRIGGER_ACTION,
+			followingLightId,
+			(u8)InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
+			0,
+			(u8*)&data,
+			SIZEOF_PARTNER_NOTIFICATION_MESSAGE,
+			false);
+		
+	} else {
+		logs("no partner ids were set");
+	}		
+
+	notifiedPartnerId = 0;
+	
 }
 
 void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
@@ -241,6 +319,24 @@ void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 	logs("Partner IDs are previousLightId : [ %u ] followingLightId : [ %u ]" ,
 		(u16) configuration.previousLightId, 
 		(u16) configuration.followingLightId);
+}
+
+void InukModule::handlePartnerNotificationMessage (NodeId senderNode, const InukPartnerNotificationMessage *packetData) {
+	
+	// remember which partner send the notification 
+	notifiedPartnerId = senderNode;
+
+	uint16_t pace = packetData->pace;
+	uint8_t eventType = packetData->eventType;
+	uint32_t timeStamp = packetData->timeStamp;
+
+	logs("Received partner notification senderNode: [%u] pace : [ %u ] eventType : [ %u ] timeStamp : [ %u ]" ,
+		(u16) senderNode, (u16) pace, (u8) eventType, (u32) timeStamp);
+
+	if (eventType == PartnerNotificationEventType::INDIVIDUAL_RECOGNIZED) {
+		p_iioModule->setLIOGlow(true);
+	}
+
 }
 
 void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader)
@@ -262,6 +358,16 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 				InukSetLightLevelMessage const * packetData = (InukSetLightLevelMessage const *) (packet->data);
 				this->setLighLeveltManual ((u8) packetData->level);
 			}
+			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION && sendData->dataLength >= SIZEOF_PARTNER_NOTIFICATION_MESSAGE){
+				InukPartnerNotificationMessage const * packetData = (InukPartnerNotificationMessage const *) (packet->data);
+				this->handlePartnerNotificationMessage(packet->header.sender, packetData);
+			}
+			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_PING_LIGHT && sendData->dataLength >= SIZEOF_PING_MESSAGE){
+				InukPingLightMessage const * packetData = (InukPingLightMessage const *) (packet->data);
+				uint16_t pingTimeInMs = packetData->timeoutInMs;
+				logs("ping light pingTimeInMs : [ %u ]", pingTimeInMs);
+				this->p_iioModule->lioPing(pingTimeInMs);
+			}
 			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_GET_DEVICE_INFO && sendData->dataLength >= SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE){
 				InukGetDeviceInfoMessage const * packetData = (InukGetDeviceInfoMessage const *) (packet->data);
 				logs("messgatype MESSAGE_GET_DEVICE_INFO [ sender : %u ] [ deviceInfoType : %u ] ", packet->header.sender, packetData->deviceInfoType);
@@ -275,6 +381,9 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 					break;
 				}
 				
+			}
+			else {
+				logs("No message handler for type %u", (u8) packet->actionType);
 			}
 		}
 	}

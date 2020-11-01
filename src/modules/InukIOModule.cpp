@@ -200,7 +200,7 @@ u16 InukIOModule::getBatteryVoltage ( void ) {
 }
 
 u8 InukIOModule::getPirSensorState ( void ) {
-	return (u8)pir;
+	return (u8)pirState;
 }
 
 // PIR driver 
@@ -228,23 +228,43 @@ void InukIOModule::initPIR ( i16 pirInput ) {
 
         //Enable the events
         nrf_drv_gpiote_in_event_enable(pirInput, true);
+		pirState = PIRState::PIR_OFF;
     }
 }
 
 void InukIOModule::pirCallback (nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action ) {
 	
-	InukIOModule * p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+	// diasbled for testing only
+
+	/*InukIOModule * p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
 	if (p_iioModule == nullptr) return;
 
 	if (nrf_gpio_pin_read(pin) == 0){
-		   p_iioModule->pir = PIRState::PIR_OFF;
+		   p_iioModule->pirState = PIRState::PIR_OFF;
     }
     else {
-	   p_iioModule->pir = PIRState::PIR_ON;
+	   p_iioModule->pirState = PIRState::PIR_ON;
     }
 
 	if (p_iioModule->pirCB != nullptr ) {
-		p_iioModule->pirCB ( p_iioModule->pir );
+		p_iioModule->pirCB ( p_iioModule->pirState );
+	} else {
+		logs("no pir callback was set" );
+	}*/
+}
+
+void InukIOModule::triggerPIRManual () {
+
+	/*if (pirState == PIRState::PIR_OFF) {
+		pirState = PIRState::PIR_ON;
+	} else {
+		pirState = PIRState::PIR_OFF;
+	}*/
+	 
+	pirState = PIRState::PIR_ON;
+	
+	if (pirCB != nullptr ) {
+		pirCB ( pirState );
 	} else {
 		logs("no pir callback was set" );
 	}
@@ -273,6 +293,7 @@ bool InukIOModule::getAnimationIsRunning (void) {
 }
 
 void InukIOModule::setLIOManual (u8 level) {
+	animationIsRunning = true;
 	this->lioMode = MANUAL_MODE;
 	this->pwmLightState = MANUAL_START;
 	nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
@@ -284,17 +305,20 @@ void InukIOModule::setLIOGlow(bool run) {
 	if (run) {
 		this->lioMode = GLOW_MODE;
 		this->pwmLightState = IS_OFF;
+		this->pwm_counter = 0;
 		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
 	}
 	else {
 		nrf_drv_pwm_stop (&m_pwm0, true);
 	}
 }
+
 void InukIOModule::setLIOLightMode (bool run) {
 	animationIsRunning = run;
 	if (run) {
 		this->lioMode = LIGHT_MODE;
 		this->pwmLightState = IS_OFF;
+		this->pwm_counter = 0;
 		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
 	}
 	else {
@@ -303,24 +327,17 @@ void InukIOModule::setLIOLightMode (bool run) {
 	
 }
 
-void InukIOModule::setLIO (LIOState state) {
-
-	this->lioState = state;
-
-	if (state == LIOState::LIO_ON || state == LIOState::LIO_GLOW) {
-		this->pwmLightState = IS_OFF;
-		nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
-	} 
-	else {
-		nrf_drv_pwm_stop (&m_pwm0, true);
-	}
- }
-
-LIOState InukIOModule::getLIO ( void ) {
-	return lioState;
+void InukIOModule::lioPing (uint16_t timeOut) {
+	animationIsRunning = true;
+	pingTimeOut = timeOut;
+	this->lioMode = PING_MODE;
+	this->pwmLightState = IS_OFF;
+	this->pwm_counter = 0;
+	nrf_drv_pwm_simple_playback(&m_pwm0, &pwm_seuqnce, 1,  NRF_DRV_PWM_FLAG_LOOP);
+	
 }
 
-void InukIOModule::lioGlowStateMachine ( void ) {
+void InukIOModule::lioPingStateMachine ( void ) {
 	this->pwm_counter++;
 
 	if (this->pwm_counter % this->pwmLightTimeSettings.refreshInterval == 0) {
@@ -334,15 +351,62 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 			this->pwmLightState = GLOW_STARTED;
 			logs("change state to GLOW_STARTED");
 			value = pwm_top_value;
-		} else if (this->pwmLightState == GLOW_STARTED && this->pwm_counter % 6 == 0) {
+		} else if (this->pwmLightState == GLOW_STARTED && this->pwm_counter % 20 == 0) {
+ 
+ 			uint16_t lastValue = p_channels[phase_channel];
+			value = pwm_top_value - maxValue;
+
+			//logs("pwm_counter [%u] rotation [%u] subValue [%u] value [%u]",
+			//	pwm_counter, rotation, subValue, value);
+			
+			p_channels[phase_channel] = pwm_top_value;
+			phase_channel = (phase_channel+1) % 4; // set next channel	
+			p_channels[phase_channel] = value;
+
+			if (this->pwm_counter * 10 >= pingTimeOut) {
+				this->pwmLightState = SEQUENCE_FINISHED;
+				logs("change state to SEQUENCE_FINISHED %u", this->pwm_counter * 10);
+				this->pwm_counter = 0;
+			}
+		} else if (this->pwmLightState == SEQUENCE_FINISHED) {
+			animationIsRunning = false;
+			phase_channel = 0;
+			value = pwm_top_value;	
+			p_channels[0] = value;
+			p_channels[1] = value;
+			p_channels[2] = value;
+			p_channels[3] = value;
+		}
+	}
+}
+
+void InukIOModule::lioGlowStateMachine ( void ) {
+	this->pwm_counter++;
+
+	if (this->pwm_counter % this->pwmLightTimeSettings.refreshInterval == 0) {
+
+		uint16_t * p_channels = (uint16_t *)&pwm_seq_values;
+		uint16_t value = p_channels[phase_channel];
+		uint16_t maxValue = this->pwmLightTimeSettings.maxGlowValue;
+
+		if (this->pwmLightState == IS_OFF) {
+			this->pwm_counter = 0;
+			this->pwmLightState = PING_STARTED;
+			logs("change state to PING_STARTED");
+			value = pwm_top_value;
+		} else if (this->pwmLightState == GLOW_STARTED && this->pwm_counter % 4 == 0) {
 			uint16_t rand =  Utility::GetRandomInteger();
 			uint16_t lastValue = p_channels[phase_channel];
+			uint16_t rotation = this->pwm_counter % 180;
+			uint16_t subValue = 100 * sin(rotation * PI/180);
+			uint16_t minBrightness = 50;
+			value = pwm_top_value - subValue - minBrightness;
+
+			//logs("pwm_counter [%u] rotation [%u] subValue [%u] value [%u]",
+			//	pwm_counter, rotation, subValue, value);
 			
-			value = pwm_top_value - (rand % maxValue / 10) ;
-			
-			phase_channel = (phase_channel+1) % 4;
+			phase_channel = (phase_channel+1) % 4; // set next channel	
 			p_channels[phase_channel] = value;
-			//logs("glow - value %u for chanel %u",value, phase_channel);
 
 			if (this->pwm_counter * 10 >= this->pwmLightTimeSettings.glowTime) {
 				this->pwmLightState = SEQUENCE_FINISHED;
@@ -350,6 +414,7 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 				this->pwm_counter = 0;
 			}
 		} else if (this->pwmLightState == SEQUENCE_FINISHED) {
+			animationIsRunning = false;
 			value = pwm_top_value;	
 			p_channels[0] = value;
 			p_channels[1] = value;
@@ -449,6 +514,7 @@ void InukIOModule::lioAutomaticStateMachine ( void ) {
 		} 
 		else if (this->pwmLightState == SEQUENCE_FINISHED) { 
 			this->pwm_counter = 0;
+			animationIsRunning = false;
 		}
 		else {
 			this->pwmLightState = IS_OFF;
@@ -474,6 +540,9 @@ void InukIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
 			case GLOW_MODE:
 				p_iio->lioGlowStateMachine( );
 			break;
+			case PING_MODE:
+				p_iio->lioPingStateMachine( );
+			break;
 		}	 
     }
 }
@@ -492,9 +561,9 @@ void InukIOModule::initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5) {
 	pwmLightState = PWMLightStates::IS_OFF;
 	pwmLightTimeSettings.refreshInterval = 1;
 	pwmLightTimeSettings.fadeOnTime  	= 1000;
-	pwmLightTimeSettings.stayOnTime	 	= 2000;
+	pwmLightTimeSettings.stayOnTime	 	= 5000;
 	pwmLightTimeSettings.fadeOffTime 	= 1000;
-	pwmLightTimeSettings.glowTime 		= 5000;
+	pwmLightTimeSettings.glowTime 		= 10000;
 	pwmLightTimeSettings.maxGlowValue	= pwm_top_value / 20;
 	pwmLightTimeSettings.maxValue 		= pwm_top_value / 5;
 

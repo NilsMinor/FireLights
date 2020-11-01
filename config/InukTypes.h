@@ -36,7 +36,8 @@ enum PIRState {
 enum LIOLightMode {
 	LIGHT_MODE = 0,
 	GLOW_MODE = 1,
-	MANUAL_MODE = 2
+	MANUAL_MODE = 2,
+	PING_MODE = 3
 };
 
 
@@ -44,7 +45,7 @@ enum LIOState {
 	LIO_ON = 0,
 	LIO_OFF = 1,
 	LIO_GLOW = 2,
-	LIO_ON_MANUAL = 3
+	LIO_ON_MANUAL = 3,
 };
 
 enum PWMLightStates {
@@ -61,7 +62,8 @@ enum PWMLightStates {
 	MANUAL_STOPPED = 8,
 	
 
-	GLOW_STARTED = 10
+	GLOW_STARTED = 10,
+	PING_STARTED = 11
 };
 
 struct PWMLightTimeSettings {
