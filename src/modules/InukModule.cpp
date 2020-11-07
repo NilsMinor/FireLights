@@ -247,7 +247,7 @@ void InukModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u
         (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
         requestHandle,
         (u8*)&data,
-        SIZEOF_INUK_DEVICE_INFO_MESSAGE,
+        SIZEOF_INUK_SET_PARTNER_MESSAGE,
         false
     );
 }
