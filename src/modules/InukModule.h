@@ -3,6 +3,7 @@
 // **
 // ** Inuk main module
 // **
+// ** How to flash Falsh device
 // ** nrfjprog --family nrf52 --program "github_nrf52_merged.hex" --verify --chiperase --reset
 ////////////////////////////////////////////////////////////////////////////////
 
