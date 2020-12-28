@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // /****************************************************************************
 // **
-// ** Inuk IO  module
+// ** FireLight IO  module
 // **
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,12 +10,12 @@
 #include <Module.h>
 #include <GlobalState.h>
 #include <BoardConfig.h>
-#include <InukTypes.h>
+#include <FireLightTypes.h>
 #include <stdint.h>
 #include <nrf_drv_gpiote.h>
 #include "../sdk/sdk14/components/drivers_nrf/pwm/nrf_drv_pwm.h"
 
-constexpr u8 INUK_IO_MODULE_CONFIG_VERSION = 1;
+constexpr u8 FireLight_IO_MODULE_CONFIG_VERSION = 1;
 #define PI                 3.14159265358979f
 
 
@@ -39,16 +39,16 @@ constexpr u8 INUK_IO_MODULE_CONFIG_VERSION = 1;
 #define APP_TIMER_OP_QUEUE_SIZE     2
 #define PWM_MAX_VALUE               10000
 
-class InukIOModule: public Module
+class FireLightIOModule: public Module
 {
 	private:
 
 		//Module configuration that is saved persistently (size must be multiple of 4)
-		struct InukIOModuleConfiguration : ModuleConfiguration{
+		struct FireLightIOModuleConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
 		};
 
-		InukIOModuleConfiguration configuration;
+		FireLightIOModuleConfiguration configuration;
 
         u16 vsolar;
         u16 vbat;
@@ -97,7 +97,7 @@ class InukIOModule: public Module
         PWMLightTimeSettings pwmLightTimeSettings;
 
 	public:
-		InukIOModule();
+		FireLightIOModule();
 
 
         u16 getSolarVoltage ( void );

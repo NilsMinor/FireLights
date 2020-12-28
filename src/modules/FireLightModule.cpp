@@ -5,25 +5,25 @@
 // ****************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <InukModule.h>
+#include <FireLightModule.h>
 #include <Logger.h>
 #include <Utility.h>
 #include <Node.h>
 #include <GlobalState.h>
-#include <InukTypes.h>
+#include <FireLightTypes.h>
 #include <stdlib.h>
 #include <Config.h>
 
 
-InukModule::InukModule()
-	: Module(ModuleId::INUK_MODULE, "inuk")
+FireLightModule::FireLightModule()
+	: Module(ModuleId::FireLight_MODULE, "FireLight")
 {
 	//Register callbacks n' stuff
 
 	//Save configuration to base class variables
 	//sizeof configuration must be a multiple of 4 bytes
 	configurationPointer = &configuration;
-	configurationLength = sizeof(InukModuleConfiguration);
+	configurationLength = sizeof(FireLightModuleConfiguration);
 	notifiedPartnerId = 0;
 
 	//Set defaults
@@ -31,23 +31,23 @@ InukModule::InukModule()
 
 }
 
-void InukModule::ResetToDefaultConfiguration()
+void FireLightModule::ResetToDefaultConfiguration()
 {
 	//Set default configuration values
 	configuration.moduleId = moduleId;
 	configuration.moduleActive = true;
-	configuration.moduleVersion = INUK_MODULE_CONFIG_VERSION;
+	configuration.moduleVersion = FireLight_MODULE_CONFIG_VERSION;
 
-	mode = InukLightModes::AUTOMATIC;
+	mode = FireLightLightModes::AUTOMATIC;
 
 	//Set additional config values...
-	this->p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+	this->p_iioModule = (FireLightIOModule *)GS->node.GetModuleById(ModuleId::FireLightIO_MODULE);
 	if (this->p_iioModule != nullptr) {
 		this->p_iioModule->setPIRCallback (this->pirCallback); 
 	}
 }
 
-void InukModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) 
+void FireLightModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) 
 {
 	//Version migration can be added here, e.g. if module has version 2 and config is version 1
 	//if(migratableConfig->moduleVersion == 1){/* ... */};
@@ -60,16 +60,16 @@ void InukModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratable
 
 }
 
-void InukModule::TimerEventHandler(u16 passedTimeDs)
+void FireLightModule::TimerEventHandler(u16 passedTimeDs)
 {
 	//Do stuff on timer...
-	// logs("Inuk timer %u", passedTimeDs);
+	// logs("FireLight timer %u", passedTimeDs);
 	
 	//this->handleSM();
 }
 
 #ifdef TERMINAL_ENABLED
-	TerminalCommandHandlerReturnType InukModule::TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize)
+	TerminalCommandHandlerReturnType FireLightModule::TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize)
 {
 	//React on commands, return true if handled, false otherwise
 	if(commandArgsSize >= 3 && TERMARGS(2, moduleName))
@@ -99,16 +99,16 @@ void InukModule::TimerEventHandler(u16 passedTimeDs)
 }
 #endif
 
-void InukModule::pirCallback (u16 state) {
+void FireLightModule::pirCallback (u16 state) {
 	
 
-	InukModule * p_mod = (InukModule *)GS->node.GetModuleById(ModuleId::INUK_MODULE);
+	FireLightModule * p_mod = (FireLightModule *)GS->node.GetModuleById(ModuleId::FireLight_MODULE);
 
 	if (p_mod) {
 		p_mod->handlePIRCallback((u16 )state);
 	}
 
-	 /*InukIOModule * p_iio = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+	 /*FireLightIOModule * p_iio = (FireLightIOModule *)GS->node.GetModuleById(ModuleId::FireLightIO_MODULE);
 	 if (p_iio != nullptr) {
 		 if (p_iio->getPirSensorState() == PIR_ON) {
 			 p_iio->setLIOLightMode(true);
@@ -117,7 +117,7 @@ void InukModule::pirCallback (u16 state) {
 	}*/
 }
 
-void InukModule::handlePIRCallback(u16 pirState) {
+void FireLightModule::handlePIRCallback(u16 pirState) {
 	logs("handlePIRCallback %u", (u16 )pirState);
 	if (pirState == PIR_ON) {
 		bool animationIsRunning = p_iioModule->getAnimationIsRunning();
@@ -131,17 +131,17 @@ void InukModule::handlePIRCallback(u16 pirState) {
 	 
 }
 
-void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
+void FireLightModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 	logs("ButtonHandler %d", holdTimeDs);
 	this->p_iioModule->triggerPIRManual();
 	//this->p_iioModule->lioPing(1000);
 
 	
 	// create data
-	// InukModuleMessage data;
+	// FireLightModuleMessage data;
 	// data.vsolar = 1111;
 	// data.vbat   = 1234;
-	// data.lightCommandMessage   = InukLightMessages::PIR_TRIGGER;
+	// data.lightCommandMessage   = FireLightLightMessages::PIR_TRIGGER;
 
 	// u8 targetNodeId = NODE_ID_BROADCAST;
 
@@ -149,53 +149,53 @@ void InukModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 	// SendModuleActionMessage(
 	// 		MessageType::MODULE_TRIGGER_ACTION,
 	// 		targetNodeId,
-	// 		InukModuleTriggerActionMessages::MESSAGE_TEST,
+	// 		FireLightModuleTriggerActionMessages::MESSAGE_TEST,
 	// 		0,
 	// 		(u8*)&data,
-	// 		SIZEOF_INUK_MODULE_MESSAGE,
+	// 		SIZEOF_FireLight_MODULE_MESSAGE,
 	// 		false
 	// );
 }
 
-void InukModule::handleSM ( void ) {
+void FireLightModule::handleSM ( void ) {
 
-	if (mode == InukLightModes::AUTOMATIC) {
+	if (mode == FireLightLightModes::AUTOMATIC) {
 		switch (currentState)
 		{
-			case InukStates::ERROR :
-				logs("Inuk state ERROR");
+			case FireLightStates::ERROR :
+				logs("FireLight state ERROR");
 				break;
-			case InukStates::STARTED :
-				logs("Inuk state STARTED");
+			case FireLightStates::STARTED :
+				logs("FireLight state STARTED");
 			
 				break;
-			case InukStates::WAITING_FOR_TRIGGER :
-				logs("Inuk state WAITING_FOR_TRIGGER");
+			case FireLightStates::WAITING_FOR_TRIGGER :
+				logs("FireLight state WAITING_FOR_TRIGGER");
 			
 				break;
-			case InukStates::TRIGGER_OCCURED :
-				logs("Inuk state TRIGGER_OCCURED");
+			case FireLightStates::TRIGGER_OCCURED :
+				logs("FireLight state TRIGGER_OCCURED");
 			
 				break;
 		
 			default:
 				break;
 		}
-	} else if (mode == InukLightModes::MANUAL) {
+	} else if (mode == FireLightLightModes::MANUAL) {
 
 	}
 	
 }
 
-void InukModule::setLighLeveltManual (u8 level) {
+void FireLightModule::setLighLeveltManual (u8 level) {
 	// change mode to manual
-	mode = InukLightModes::MANUAL;
+	mode = FireLightLightModes::MANUAL;
 
 	logs("setLightManual :  %u", level);
 	this->p_iioModule->setLIOManual(level);
 }
 
-void InukModule::saveModuleConfiguration (void) {
+void FireLightModule::saveModuleConfiguration (void) {
 	 //Save the module config to flash
 
 	const RecordStorageResultCode err = Utility::SaveModuleSettingsToFlash(
@@ -210,9 +210,9 @@ void InukModule::saveModuleConfiguration (void) {
 	logs("saveModuleConfiguration : %u" , (u8) err);
 }
 
-void InukModule::sendDeviceInfoPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
+void FireLightModule::sendDeviceInfoPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
 
-	InukDeviceInfoMessage data;
+	FireLightDeviceInfoMessage data;
 	data.nodeId = targetNode;
 	data.vsolar = p_iioModule->getSolarVoltage();
 	data.vbat   = p_iioModule->getBatteryVoltage();
@@ -223,17 +223,17 @@ void InukModule::sendDeviceInfoPacket (  NodeId senderNode, NodeId targetNode, u
 	 SendModuleActionMessage(
         MessageType::MODULE_ACTION_RESPONSE,
         senderNode,
-        (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
+        (u8)FireLightModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
         requestHandle,
         (u8*)&data,
-        SIZEOF_INUK_DEVICE_INFO_MESSAGE,
+        SIZEOF_FireLight_DEVICE_INFO_MESSAGE,
         false
     );
 }
 
-void InukModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
+void FireLightModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u8 requestHandle ) {
 
-	InukSetPartnerIDsMessage data;
+	FireLightSetPartnerIDsMessage data;
 	data.nodeId = targetNode;
 	data.previousLightId = (u16) configuration.previousLightId;
 	data.followingLightId = (u16) configuration.followingLightId;
@@ -244,15 +244,15 @@ void InukModule::sendPartnerIdsPacket (  NodeId senderNode, NodeId targetNode, u
 	 SendModuleActionMessage(
         MessageType::MODULE_ACTION_RESPONSE,
         senderNode,
-        (u8)InukModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
+        (u8)FireLightModuleActionResponseMessages::MESSAGE_DEVICE_INFO_RESPONSE,
         requestHandle,
         (u8*)&data,
-        SIZEOF_INUK_SET_PARTNER_MESSAGE,
+        SIZEOF_FireLight_SET_PARTNER_MESSAGE,
         false
     );
 }
 
-void InukModule::sendGlowNotificationToPartner ( ) {
+void FireLightModule::sendGlowNotificationToPartner ( ) {
 
 	// get partner IDs
 	uint16_t previousLightId = configuration.previousLightId;
@@ -264,7 +264,7 @@ void InukModule::sendGlowNotificationToPartner ( ) {
 
 	// direction --> [previous light] - [this light] - [following light]
 
-	InukPartnerNotificationMessage data;
+	FireLightPartnerNotificationMessage data;
 	data.eventType = (u8) PartnerNotificationEventType::INDIVIDUAL_RECOGNIZED;
 	data.timeStamp = (u32) 123456;
 	data.pace = (u16) 5;
@@ -277,7 +277,7 @@ void InukModule::sendGlowNotificationToPartner ( ) {
 		SendModuleActionMessage(
 			MessageType::MODULE_TRIGGER_ACTION,
 			previousLightId,
-			(u8)InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
+			(u8)FireLightModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
 			0,
 			(u8*)&data,
 			SIZEOF_PARTNER_NOTIFICATION_MESSAGE,
@@ -292,7 +292,7 @@ void InukModule::sendGlowNotificationToPartner ( ) {
 		SendModuleActionMessage(
 			MessageType::MODULE_TRIGGER_ACTION,
 			followingLightId,
-			(u8)InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
+			(u8)FireLightModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION,
 			0,
 			(u8*)&data,
 			SIZEOF_PARTNER_NOTIFICATION_MESSAGE,
@@ -306,7 +306,7 @@ void InukModule::sendGlowNotificationToPartner ( ) {
 	
 }
 
-void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
+void FireLightModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 	if (previousLightId) {
 		configuration.previousLightId = previousLightId;
 	}
@@ -321,7 +321,7 @@ void InukModule::setPartnerLights (u16 previousLightId, u16 followingLightId) {
 		(u16) configuration.followingLightId);
 }
 
-void InukModule::handlePartnerNotificationMessage (NodeId senderNode, const InukPartnerNotificationMessage *packetData) {
+void FireLightModule::handlePartnerNotificationMessage (NodeId senderNode, const FireLightPartnerNotificationMessage *packetData) {
 	
 	// remember which partner send the notification 
 	notifiedPartnerId = senderNode;
@@ -339,7 +339,7 @@ void InukModule::handlePartnerNotificationMessage (NodeId senderNode, const Inuk
 
 }
 
-void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader)
+void FireLightModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader)
 {
 	//Must call superclass for handling
 	Module::MeshMessageReceivedHandler(connection, sendData, packetHeader);
@@ -350,26 +350,26 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId ){
 
-			if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_PARTNER && sendData->dataLength >= SIZEOF_INUK_SET_PARTNER_MESSAGE){
-		 		InukSetPartnerIDsMessage const * packetData = (InukSetPartnerIDsMessage const *) (packet->data);
+			if(packet->actionType == FireLightModuleTriggerActionMessages::MESSAGE_SET_PARTNER && sendData->dataLength >= SIZEOF_FireLight_SET_PARTNER_MESSAGE){
+		 		FireLightSetPartnerIDsMessage const * packetData = (FireLightSetPartnerIDsMessage const *) (packet->data);
 				this->setPartnerLights ((u16) packetData->previousLightId, (u16) packetData->followingLightId);
 			}
-			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_SET_LIGHT_LEVEL && sendData->dataLength >= SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE){
-				InukSetLightLevelMessage const * packetData = (InukSetLightLevelMessage const *) (packet->data);
+			else if(packet->actionType == FireLightModuleTriggerActionMessages::MESSAGE_SET_LIGHT_LEVEL && sendData->dataLength >= SIZEOF_FireLight_SET_LIGHT_LEVEL_MESSAGE){
+				FireLightSetLightLevelMessage const * packetData = (FireLightSetLightLevelMessage const *) (packet->data);
 				this->setLighLeveltManual ((u8) packetData->level);
 			}
-			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION && sendData->dataLength >= SIZEOF_PARTNER_NOTIFICATION_MESSAGE){
-				InukPartnerNotificationMessage const * packetData = (InukPartnerNotificationMessage const *) (packet->data);
+			else if(packet->actionType == FireLightModuleTriggerActionMessages::MESSAGE_PARTNER_NOTIFICATION && sendData->dataLength >= SIZEOF_PARTNER_NOTIFICATION_MESSAGE){
+				FireLightPartnerNotificationMessage const * packetData = (FireLightPartnerNotificationMessage const *) (packet->data);
 				this->handlePartnerNotificationMessage(packet->header.sender, packetData);
 			}
-			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_PING_LIGHT && sendData->dataLength >= SIZEOF_PING_MESSAGE){
-				InukPingLightMessage const * packetData = (InukPingLightMessage const *) (packet->data);
+			else if(packet->actionType == FireLightModuleTriggerActionMessages::MESSAGE_PING_LIGHT && sendData->dataLength >= SIZEOF_PING_MESSAGE){
+				FireLightPingLightMessage const * packetData = (FireLightPingLightMessage const *) (packet->data);
 				uint16_t pingTimeInMs = packetData->timeoutInMs;
 				logs("ping light pingTimeInMs : [ %u ]", pingTimeInMs);
 				this->p_iioModule->lioPing(pingTimeInMs);
 			}
-			else if(packet->actionType == InukModuleTriggerActionMessages::MESSAGE_GET_DEVICE_INFO && sendData->dataLength >= SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE){
-				InukGetDeviceInfoMessage const * packetData = (InukGetDeviceInfoMessage const *) (packet->data);
+			else if(packet->actionType == FireLightModuleTriggerActionMessages::MESSAGE_GET_DEVICE_INFO && sendData->dataLength >= SIZEOF_FireLight_GET_DEVICE_INFO_MESSAGE){
+				FireLightGetDeviceInfoMessage const * packetData = (FireLightGetDeviceInfoMessage const *) (packet->data);
 				logs("messgatype MESSAGE_GET_DEVICE_INFO [ sender : %u ] [ deviceInfoType : %u ] ", packet->header.sender, packetData->deviceInfoType);
 				switch ((u16)packetData->deviceInfoType) {
 					case GET_DEVICE_INFO:
@@ -395,7 +395,7 @@ void InukModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConn
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId)
 		{
-			if(packet->actionType == InukModuleActionResponseMessages::MESSAGE_TEST_RESPONSE)
+			if(packet->actionType == FireLightModuleActionResponseMessages::MESSAGE_TEST_RESPONSE)
 			{
 
 			}

@@ -34,7 +34,7 @@
 #define ACTIVATE_JSON_LOGGING 1 //Undefine to remove json communication over uart
 #define ACTIVATE_UART 1 //Undefine to remove the UART terminal
 #define ACTIVATE_SEGGER_RTT 1 //Undefine to disable debugging over Segger Rtt
-#define DEVICE_NAME "INUK"
+#define DEVICE_NAME "FireLight"
 #define PWM_ENABLED 1
 #define PWM0_ENABLED 1
 #define LOW_POWER_PWM_ENABLED 1

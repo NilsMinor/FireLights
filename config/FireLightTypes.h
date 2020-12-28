@@ -4,19 +4,19 @@
 #include <stdint.h>
 #include <PrimitiveTypes.h>
 
-enum InukStates
+enum FireLightStates
 {
 	ERROR        			= -1,
 	STARTED 				= 0,
 	WAITING_FOR_TRIGGER    	= 1,
 	TRIGGER_OCCURED      	= 2,
 } ; 
-enum InukLightModes {
+enum FireLightLightModes {
 	AUTOMATIC = 0,
 	MANUAL = 1
 };
 
-struct InukExtPins : CustomPins {
+struct FireLightExtPins : CustomPins {
     i16 lio1 = -1;
 	i16 lio2 = -1;
 	i16 lio3 = -1;

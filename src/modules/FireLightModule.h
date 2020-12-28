@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // /****************************************************************************
 // **
-// ** Inuk main module
+// ** FireLight main module
 // **
 // ** How to flash Falsh device
 // ** nrfjprog --family nrf52 --program "github_dev_nrf52_merged.hex" --verify --chiperase --reset
@@ -10,25 +10,25 @@
 #pragma once
 
 #include <Module.h>
-#include <InukIOModule.h>
+#include <FireLightIOModule.h>
 
-constexpr VendorModuleId INUK_MODULE_ID = GET_VENDOR_MODULE_ID(0xAAAA, 2);
-constexpr u8 INUK_MODULE_CONFIG_VERSION = 1;
+constexpr VendorModuleId FireLight_MODULE_ID = GET_VENDOR_MODULE_ID(0xAAAA, 2);
+constexpr u8 FireLight_MODULE_CONFIG_VERSION = 1;
 
-class InukModule: public Module
+class FireLightModule: public Module
 {
 	private:
 
 		//Module configuration that is saved persistently (size must be multiple of 4)
-		struct InukModuleConfiguration : ModuleConfiguration{
+		struct FireLightModuleConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
 			u16 previousLightId;
 			u16 followingLightId;
 		};
 
-		InukModuleConfiguration configuration;
+		FireLightModuleConfiguration configuration;
 
-		enum InukModuleTriggerActionMessages{
+		enum FireLightModuleTriggerActionMessages{
 			MESSAGE_TEST = 0,
 			MESSAGE_SET_LIGHT_LEVEL = 1,
 			MESSAGE_SET_PARTNER = 2,
@@ -37,16 +37,16 @@ class InukModule: public Module
 			MESSAGE_GET_DEVICE_INFO = 10,
 		};
 
-		enum InukModuleActionResponseMessages{
+		enum FireLightModuleActionResponseMessages{
 			MESSAGE_TEST_RESPONSE = 0,
 			MESSAGE_DEVICE_INFO_RESPONSE = 20,
 		};
 
-		enum InukLightMessages {
+		enum FireLightLightMessages {
 			PIR_TRIGGER = 0
 		};
 
-		enum InukDeviceInfoTypes {
+		enum FireLightDeviceInfoTypes {
 			GET_DEVICE_INFO = 0,
 			GET_PARTNER_IDS = 1
 		};
@@ -62,30 +62,30 @@ class InukModule: public Module
 		#pragma pack(1)
 
 			// SET LIGHT LEVEL MESSAGE
-			#define SIZEOF_INUK_SET_LIGHT_LEVEL_MESSAGE 2
+			#define SIZEOF_FireLight_SET_LIGHT_LEVEL_MESSAGE 2
 			typedef struct
 			{
 				u16 level;
-			}InukSetLightLevelMessage;
+			}FireLightSetLightLevelMessage;
 			// SET LIGHT LEVEL MESSAGE
 
 			// SET PARTNER IDS MESSAGE
-			#define SIZEOF_INUK_SET_PARTNER_MESSAGE 6
+			#define SIZEOF_FireLight_SET_PARTNER_MESSAGE 6
 			typedef struct
 			{
 				u16 nodeId;
 				u16 previousLightId;
 				u16 followingLightId;
-			}InukSetPartnerIDsMessage;
+			}FireLightSetPartnerIDsMessage;
 			// SET PARTNER IDS MESSAGE
 
 			// GET DEVICE INFO
-			#define SIZEOF_INUK_GET_DEVICE_INFO_MESSAGE 4
+			#define SIZEOF_FireLight_GET_DEVICE_INFO_MESSAGE 4
 			typedef struct
 			{
 				u16 nodeId;
 				u16 deviceInfoType;
-			} InukGetDeviceInfoMessage;
+			} FireLightGetDeviceInfoMessage;
 			// GET DEVICE INFO
 
 			// PARTNER NOTIFICATION MESSAGE
@@ -95,10 +95,10 @@ class InukModule: public Module
 				u8 eventType;
 				u32 timeStamp;
 				u16 pace;
-			}InukPartnerNotificationMessage;
+			}FireLightPartnerNotificationMessage;
 			// PARTNER NOTIFICATION MESSAGE
 
-			#define SIZEOF_INUK_DEVICE_INFO_MESSAGE 7
+			#define SIZEOF_FireLight_DEVICE_INFO_MESSAGE 7
 			typedef struct
 			{
 				u16 nodeId;
@@ -106,22 +106,22 @@ class InukModule: public Module
 				u16 vbat;
 				u8 pirState;
 
-			}InukDeviceInfoMessage;
+			}FireLightDeviceInfoMessage;
 
 			#define SIZEOF_PING_MESSAGE 2
 			typedef struct
 			{
 				u16 timeoutInMs;
 
-			}InukPingLightMessage;
+			}FireLightPingLightMessage;
 			 
 
 		#pragma pack(pop)
 		//####### Module messages end
 
-		InukLightModes mode;
-		InukStates currentState; 
-		InukIOModule * p_iioModule;
+		FireLightLightModes mode;
+		FireLightStates currentState; 
+		FireLightIOModule * p_iioModule;
 		NodeId notifiedPartnerId;
 		
 		void handleSM ( void );
@@ -133,11 +133,11 @@ class InukModule: public Module
 		void sendDeviceInfoPacket ( NodeId senderNode, NodeId targetNode, u8 requestHandle );
 		void sendPartnerIdsPacket ( NodeId senderNode, NodeId targetNode, u8 requestHandle ); 
 		void sendGlowNotificationToPartner ( );
-		void handlePartnerNotificationMessage (NodeId senderNode, const InukPartnerNotificationMessage *packetData);
+		void handlePartnerNotificationMessage (NodeId senderNode, const FireLightPartnerNotificationMessage *packetData);
 		void handlePIRCallback(u16 pirState);
 
 	public:
-		InukModule();
+		FireLightModule();
 
 		void ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength) override final;
 

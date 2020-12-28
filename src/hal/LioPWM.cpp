@@ -12,15 +12,15 @@
 
 
 // void LioPWM::InitLioPWM ( void ) {
-//     InukExtPins inukPinConfig;
-// 	GS->boardconf.getSensorPins(&inukPinConfig);
+//     FireLightExtPins FireLightPinConfig;
+// 	GS->boardconf.getSensorPins(&FireLightPinConfig);
 
-//     if (inukPinConfig.lio1 != -1) {
-//         this->lioPins[0] = inukPinConfig.lio1;
-//         this->lioPins[1] = inukPinConfig.lio2;
-//         this->lioPins[2] = inukPinConfig.lio3;
-//         this->lioPins[3] = inukPinConfig.lio4;
-//         this->lioPins[4] = inukPinConfig.lio5;
+//     if (FireLightPinConfig.lio1 != -1) {
+//         this->lioPins[0] = FireLightPinConfig.lio1;
+//         this->lioPins[1] = FireLightPinConfig.lio2;
+//         this->lioPins[2] = FireLightPinConfig.lio3;
+//         this->lioPins[3] = FireLightPinConfig.lio4;
+//         this->lioPins[4] = FireLightPinConfig.lio5;
 
 //         uint32_t err_code;
 //     }

@@ -179,8 +179,8 @@ enum class ModuleId : u8 {
     //PING_MODULE = 201, Deprecated as of 26.08.2020, now uses a VendorModuleId
     //VENDOR_TEMPLATE_MODULE = 202, Deprecated as of 20.08.2020, now uses a VendorModuleId
     SIG_EXAMPLE_MODULE = 203,
-    INUKIO_MODULE = 204,
-	INUK_MODULE = 205,
+    FireLightIO_MODULE = 204,
+	FireLight_MODULE = 205,
 
     //The VendorModuleId was introduced to have a range of moduleIds that do not clash
     //between different vendors

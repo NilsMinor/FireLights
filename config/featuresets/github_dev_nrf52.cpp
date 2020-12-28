@@ -39,8 +39,8 @@
 #include "MeshAccessModule.h"
 #include "VendorTemplateModule.h"
 #include "GlobalState.h"
-#include "InukModule.h"
-#include "InukIOModule.h"
+#include "FireLightModule.h"
+#include "FireLightIOModule.h"
 #include <Boardconfig.h>
 
 
@@ -106,8 +106,8 @@ u32 InitializeModules_github_dev_nrf52(bool createModule)
     size += GS->InitializeModule<VendorTemplateModule>(createModule, RECORD_STORAGE_RECORD_ID_VENDOR_MODULE_CONFIG_BASE + 0);
 
     size += GS->InitializeModule<MeshAccessModule>(createModule);
-    size += GS->InitializeModule<InukIOModule>(createModule);
-	size += GS->InitializeModule<InukModule>(createModule);
+    size += GS->InitializeModule<FireLightIOModule>(createModule);
+	size += GS->InitializeModule<FireLightModule>(createModule);
     return size;
 }
 

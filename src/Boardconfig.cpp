@@ -35,10 +35,10 @@
 #include <RecordStorage.h>
 
  
-//extern void setBoard_inuk(BoardConfiguration *c);
+//extern void setBoard_FireLight(BoardConfiguration *c);
 extern void SetBoard_4(BoardConfiguration* c);
 extern void SetBoard_18(BoardConfiguration* c);
-extern void SetBoard_inuk(BoardConfiguration* c);
+extern void SetBoard_FireLight(BoardConfiguration* c);
 
 void* fmBoardConfigPtr;
 
@@ -86,7 +86,7 @@ void Boardconf::ResetToDefaultConfiguration()
     //Now, we load all Default boards (nRf Development kits)
     SetBoard_4(&configuration);
     SetBoard_18(&configuration);
-    SetBoard_inuk(&configuration);
+    SetBoard_FireLight(&configuration);
 
 
 #ifdef SIM_ENABLED

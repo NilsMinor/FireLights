@@ -5,52 +5,52 @@
 // ****************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <InukIOModule.h>
+#include <FireLightIOModule.h>
 #include <Logger.h>
 #include <Utility.h>
 #include <Node.h>
 #include <GlobalState.h>
-#include <InukTypes.h>
+#include <FireLightTypes.h>
 #include "app_util_platform.h"
 #include <cmath>  
 
 
 
-InukIOModule::InukIOModule()
-	: Module(ModuleId::INUKIO_MODULE, "inuk-io")
+FireLightIOModule::FireLightIOModule()
+	: Module(ModuleId::FireLightIO_MODULE, "FireLight-io")
 {
 	//Register callbacks n' stuff
 
 	//Save configuration to base class variables
 	//sizeof configuration must be a multiple of 4 bytes
 	configurationPointer = &configuration;
-	configurationLength = sizeof(InukIOModuleConfiguration);
+	configurationLength = sizeof(FireLightIOModuleConfiguration);
 
 	//Set defaults
 	ResetToDefaultConfiguration();
 
-    InukExtPins inukPinConfig;
-	GS->boardconf.getCustomPinset(&inukPinConfig);
+    FireLightExtPins FireLightPinConfig;
+	GS->boardconf.getCustomPinset(&FireLightPinConfig);
 
-    this->InitADC( inukPinConfig.vbatPin, inukPinConfig.vsolarPin );
-    this->initPIR( inukPinConfig.pirPin );
-	this->initPWM (inukPinConfig.lio1, inukPinConfig.lio2, inukPinConfig.lio3,
-				  inukPinConfig.lio4, inukPinConfig.lio5);
+    this->InitADC( FireLightPinConfig.vbatPin, FireLightPinConfig.vsolarPin );
+    this->initPIR( FireLightPinConfig.pirPin );
+	this->initPWM (FireLightPinConfig.lio1, FireLightPinConfig.lio2, FireLightPinConfig.lio3,
+				  FireLightPinConfig.lio4, FireLightPinConfig.lio5);
 
 	animationIsRunning = false;
 }
 
-void InukIOModule::ResetToDefaultConfiguration()
+void FireLightIOModule::ResetToDefaultConfiguration()
 {
 	//Set default configuration values
 	configuration.moduleId = moduleId;
 	configuration.moduleActive = true;
-	configuration.moduleVersion = INUK_IO_MODULE_CONFIG_VERSION;
+	configuration.moduleVersion = FireLight_IO_MODULE_CONFIG_VERSION;
 
 	//Set additional config values...
 }
 
-void InukIOModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength)
+void FireLightIOModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratableConfigLength)
 {
 	//Version migration can be added here, e.g. if module has version 2 and config is version 1
 	//if(migratableConfig->moduleVersion == 1){/* ... */};
@@ -59,7 +59,7 @@ void InukIOModule::ConfigurationLoadedHandler(u8* migratableConfig, u16 migratab
 
 }
 
-void InukIOModule::TimerEventHandler(u16 passedTimeDs)
+void FireLightIOModule::TimerEventHandler(u16 passedTimeDs)
 {
 	// Trigger adc measurement
 	if (isADCInitialized && adcUpdateActive && SHOULD_IV_TRIGGER(GS->appTimerDs, passedTimeDs, 10)){
@@ -72,7 +72,7 @@ void InukIOModule::TimerEventHandler(u16 passedTimeDs)
 	}
 }
 
-TerminalCommandHandlerReturnType InukIOModule::TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize)
+TerminalCommandHandlerReturnType FireLightIOModule::TerminalCommandHandler(const char* commandArgs[], u8 commandArgsSize)
 {
 	//React on commands, return true if handled, false otherwise
 	if(commandArgsSize >= 3 && TERMARGS(2, moduleName))
@@ -101,11 +101,11 @@ TerminalCommandHandlerReturnType InukIOModule::TerminalCommandHandler(const char
 	return Module::TerminalCommandHandler(commandArgs, commandArgsSize);
 }
 
-void InukIOModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
+void FireLightIOModule::ButtonHandler(u8 buttonId, u32 holdTimeDs) {
 
 }
 
-void InukIOModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader) 
+void FireLightIOModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseConnectionSendData* sendData, ConnPacketHeader const * packetHeader) 
 {
 	//Must call superclass for handling
 	Module::MeshMessageReceivedHandler(connection, sendData, packetHeader);
@@ -129,7 +129,7 @@ void InukIOModule::MeshMessageReceivedHandler(BaseConnection* connection, BaseCo
 
 // ADC driver
 
-void InukIOModule::InitADC ( i16 vbatPinInput, i16 vsolarPinInput ) {
+void FireLightIOModule::InitADC ( i16 vbatPinInput, i16 vsolarPinInput ) {
     
     isADCInitialized = false;
 	adcUpdateActive = false;
@@ -147,7 +147,7 @@ void InukIOModule::InitADC ( i16 vbatPinInput, i16 vsolarPinInput ) {
     }
 }
 
-void InukIOModule::convertADCValues ( void ) {
+void FireLightIOModule::convertADCValues ( void ) {
 
     u32 adc_sum_value = 0;
 	for (u16 i = 0; i < ADC_SAMPLES; i++) {
@@ -168,14 +168,14 @@ void InukIOModule::convertADCValues ( void ) {
     //logs("vbat = %u mV, vsolar = %u mV updated pin %u", vbat , vsolar, selectedADC);
 }
 
-void InukIOModule::AdcEventHandler()
+void FireLightIOModule::AdcEventHandler()
 {
-    InukIOModule * p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+    FireLightIOModule * p_iioModule = (FireLightIOModule *)GS->node.GetModuleById(ModuleId::FireLightIO_MODULE);
 	if (p_iioModule == nullptr) return;
 	p_iioModule->convertADCValues();
 }
 
-void InukIOModule::selectADC (i16 adcChannel) {
+void FireLightIOModule::selectADC (i16 adcChannel) {
     if (adcChannel != -1) {
         selectedADC = adcChannel;
         //logs("select channel %u", selectedADC);
@@ -186,26 +186,26 @@ void InukIOModule::selectADC (i16 adcChannel) {
     }
 }
 
-u16 InukIOModule::toMilliVolts(u16 rawValue, u32 Resistor1, u32 Resistor2) {
+u16 FireLightIOModule::toMilliVolts(u16 rawValue, u32 Resistor1, u32 Resistor2) {
 	double voltageDividerDv =  (double(Resistor1 + Resistor2)) / double(Resistor2);
 	return  u16( rawValue * ADC_REF / (1023) * voltageDividerDv ) ;
 }
 
-u16 InukIOModule::getSolarVoltage ( void ) {
+u16 FireLightIOModule::getSolarVoltage ( void ) {
 	return vsolar;
 }
 
-u16 InukIOModule::getBatteryVoltage ( void ) {
+u16 FireLightIOModule::getBatteryVoltage ( void ) {
 	return vbat;
 }
 
-u8 InukIOModule::getPirSensorState ( void ) {
+u8 FireLightIOModule::getPirSensorState ( void ) {
 	return (u8)pirState;
 }
 
 // PIR driver 
 
-void InukIOModule::initPIR ( i16 pirInput ) {
+void FireLightIOModule::initPIR ( i16 pirInput ) {
 
     if ( pirInput != -1) {
         logs("init pir at pit %u", pirInput );
@@ -232,11 +232,11 @@ void InukIOModule::initPIR ( i16 pirInput ) {
     }
 }
 
-void InukIOModule::pirCallback (nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action ) {
+void FireLightIOModule::pirCallback (nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action ) {
 	
 	// diasbled for testing only
 
-	/*InukIOModule * p_iioModule = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+	/*FireLightIOModule * p_iioModule = (FireLightIOModule *)GS->node.GetModuleById(ModuleId::FireLightIO_MODULE);
 	if (p_iioModule == nullptr) return;
 
 	if (nrf_gpio_pin_read(pin) == 0){
@@ -253,7 +253,7 @@ void InukIOModule::pirCallback (nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t 
 	}*/
 }
 
-void InukIOModule::triggerPIRManual () {
+void FireLightIOModule::triggerPIRManual () {
 
 	/*if (pirState == PIRState::PIR_OFF) {
 		pirState = PIRState::PIR_ON;
@@ -271,10 +271,10 @@ void InukIOModule::triggerPIRManual () {
 }
 
 /**
- * Note it is important that InukIOModule was created before the module that implements the
+ * Note it is important that FireLightIOModule was created before the module that implements the
  * pirCallback method, otherwise it is not able to set a callback 
  */ 
-void InukIOModule::setPIRCallback (pirCallbackType cb) {
+void FireLightIOModule::setPIRCallback (pirCallbackType cb) {
 	this->pirCB = cb;
 }
 
@@ -288,11 +288,11 @@ static nrf_pwm_sequence_t      	   	pwm_seuqnce;
 static uint16_t						phase_channel = 0;
 
 
-bool InukIOModule::getAnimationIsRunning (void) {
+bool FireLightIOModule::getAnimationIsRunning (void) {
 	return animationIsRunning;
 }
 
-void InukIOModule::setLIOManual (u8 level) {
+void FireLightIOModule::setLIOManual (u8 level) {
 	animationIsRunning = true;
 	this->lioMode = MANUAL_MODE;
 	this->pwmLightState = MANUAL_START;
@@ -300,7 +300,7 @@ void InukIOModule::setLIOManual (u8 level) {
 	dynamicLevel = level;
 }
 
-void InukIOModule::setLIOGlow(bool run) {
+void FireLightIOModule::setLIOGlow(bool run) {
 	animationIsRunning = run;
 	if (run) {
 		this->lioMode = GLOW_MODE;
@@ -313,7 +313,7 @@ void InukIOModule::setLIOGlow(bool run) {
 	}
 }
 
-void InukIOModule::setLIOLightMode (bool run) {
+void FireLightIOModule::setLIOLightMode (bool run) {
 	animationIsRunning = run;
 	if (run) {
 		this->lioMode = LIGHT_MODE;
@@ -327,7 +327,7 @@ void InukIOModule::setLIOLightMode (bool run) {
 	
 }
 
-void InukIOModule::lioPing (uint16_t timeOut) {
+void FireLightIOModule::lioPing (uint16_t timeOut) {
 	animationIsRunning = true;
 	pingTimeOut = timeOut;
 	this->lioMode = PING_MODE;
@@ -337,7 +337,7 @@ void InukIOModule::lioPing (uint16_t timeOut) {
 	
 }
 
-void InukIOModule::lioPingStateMachine ( void ) {
+void FireLightIOModule::lioPingStateMachine ( void ) {
 	this->pwm_counter++;
 
 	if (this->pwm_counter % this->pwmLightTimeSettings.refreshInterval == 0) {
@@ -380,7 +380,7 @@ void InukIOModule::lioPingStateMachine ( void ) {
 	}
 }
 
-void InukIOModule::lioGlowStateMachine ( void ) {
+void FireLightIOModule::lioGlowStateMachine ( void ) {
 	this->pwm_counter++;
 
 	if (this->pwm_counter % this->pwmLightTimeSettings.refreshInterval == 0) {
@@ -424,7 +424,7 @@ void InukIOModule::lioGlowStateMachine ( void ) {
 	}
 }
 
-void InukIOModule::lioManualStateMachine ( void ) {
+void FireLightIOModule::lioManualStateMachine ( void ) {
 	uint16_t * p_channels = (uint16_t *)&pwm_seq_values;
 	uint16_t targetLevel = pwm_top_value - pwm_top_value / 100 * dynamicLevel;
 	uint8_t channel = 0;
@@ -469,7 +469,7 @@ void InukIOModule::lioManualStateMachine ( void ) {
 	}
 }
 
-void InukIOModule::lioAutomaticStateMachine ( void ) {
+void FireLightIOModule::lioAutomaticStateMachine ( void ) {
 	
 	this->pwm_counter++;
 
@@ -524,8 +524,8 @@ void InukIOModule::lioAutomaticStateMachine ( void ) {
 	}
 }
 
-void InukIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
-	InukIOModule * p_iio = (InukIOModule *)GS->node.GetModuleById(ModuleId::INUKIO_MODULE);
+void FireLightIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
+	FireLightIOModule * p_iio = (FireLightIOModule *)GS->node.GetModuleById(ModuleId::FireLightIO_MODULE);
 	if (p_iio == nullptr) return;
 
     if (event_type == NRF_DRV_PWM_EVT_FINISHED)
@@ -547,7 +547,7 @@ void InukIOModule::pwm_handler(nrf_drv_pwm_evt_type_t event_type) {
     }
 }
 
-void InukIOModule::initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5) {
+void FireLightIOModule::initPWM (i16 p1, i16 p2, i16 p3, i16 p4, i16 p5) {
 
     pwm_seuqnce.values.p_individual = &pwm_seq_values;
     pwm_seuqnce.length              = NRF_PWM_VALUES_LENGTH(pwm_seq_values);

@@ -77,3 +77,20 @@ Direction -->
 
 
 
+## Update development branch from remote master
+
+Update firelight branch with remote fruitymesh master
+
+- git checkout master (checkout local master)
+- git pull --rebase upstream master ( checkout remote master and merge into local master)
+- git checkout firelight (checkout local development branch)
+- git merge master (merge master into branch)
+
+In vs-code select the correct build targets (github_dev_nrf52)
+
+### Upload via jlink
+
+To upload the build hex file to the flash use the following command :
+
+    nrfjprog --family nrf52 --program "github_dev_nrf52_merged.hex" --verify --chiperase --reset
+    

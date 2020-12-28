@@ -2,7 +2,7 @@
 
 #include <GlobalState.h>
 #include <BoardConfig.h>
-#include <InukTypes.h>
+#include <FireLightypes.h>
 #include <stdint.h>
 
 class LioPWM

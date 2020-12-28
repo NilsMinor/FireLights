@@ -1,14 +1,14 @@
 
 #include <FruityHal.h>
 #include <Boardconfig.h>
-#include <InukTypes.h>
+#include <FireLightTypes.h>
 #include <GlobalState.h>
 
-// inuk base board - https://github.com/NilsMinor/inuk-base
-extern void setCustomPinset_Inuk(CustomPins* pinsetConfig);
+// FireLight base board - https://github.com/NilsMinor/FireLight-base
+extern void setCustomPinset_FireLight(CustomPins* pinsetConfig);
 
-void setCustomPinset_Inuk(CustomPins* pinConfig){
-		InukExtPins* pins = (InukExtPins*)pinConfig;
+void setCustomPinset_FireLight(CustomPins* pinConfig){
+		FireLightExtPins* pins = (FireLightExtPins*)pinConfig;
         pins->lio1      = 11;   // pwm output
 		pins->lio2      = 12;   // pwm output
         pins->lio3      = 13;   // pwm output
@@ -20,7 +20,7 @@ void setCustomPinset_Inuk(CustomPins* pinConfig){
         pins->pirPin    = 16;   // high active
 }
 
-void SetBoard_inuk(BoardConfiguration *c)
+void SetBoard_FireLight(BoardConfiguration *c)
 {
 #if BOARD_TYPE == 10000
     if (c->boardType == 10000)
@@ -47,7 +47,7 @@ void SetBoard_inuk(BoardConfiguration *c)
 
         // disable fruitymesh adc
         c->batteryAdcInputPin = -1;
-        GS->boardconf.getCustomPinset = &setCustomPinset_Inuk;
+        GS->boardconf.getCustomPinset = &setCustomPinset_FireLight;
 
     }
 #endif // BOARD_TYPE == 4
