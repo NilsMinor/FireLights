@@ -12,13 +12,6 @@ This implementation uses custom modules, custom board config and messages. The f
 ...
 
 ### Message types
-<style> table:nth-of-type(1) {  display:table;  width:100%;}</style>
-<style> table:nth-of-type(2) {  display:table;  width:100%;}</style>
-<style> table:nth-of-type(3) {  display:table;  width:100%;}</style>
-<style> table:nth-of-type(4) {  display:table;  width:100%;}</style>
-<style> table:nth-of-type(5) {  display:table;  width:100%;}</style>
-<style> table:nth-of-type(6) {  display:table;  width:100%;}</style>
-
 
 | Message | Payload size | Action trigger | Action response |
 |----------|:-------------|:------:|:------:|
